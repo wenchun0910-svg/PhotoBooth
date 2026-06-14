@@ -552,23 +552,26 @@
             showResultView(imageData);
             
             // 儲存至 Firebase (背景執行)
-            try {
-                if(!currentUserId) throw new Error("尚未認證");
-                const photosRef = collection(db, 'artifacts', appId, 'public', 'data', 'photos');
-                const docRef = await addDoc(photosRef, {
-                    imageData: imageData,
-                    timestamp: Date.now(),
-                    userId: currentUserId
-                });
-                
-                // 產生分享用網址與 QR Code
-                const shareUrl = window.location.origin + window.location.pathname + '?view=' + docRef.id;
-                generateQRCode(shareUrl);
-                
-            } catch (err) {
-                console.error("Save photo err:", err);
-                alert("儲存至雲端失敗，但您仍可手動下載。");
-                generateQRCode(window.location.href); // Fallback dummy QR
+            if (db && auth && currentUserId) {
+                try {
+                    const photosRef = collection(db, 'artifacts', appId, 'public', 'data', 'photos');
+                    const docRef = await addDoc(photosRef, {
+                        imageData: imageData,
+                        timestamp: Date.now(),
+                        userId: currentUserId
+                    });
+                    
+                    // 產生分享用網址與 QR Code
+                    const shareUrl = window.location.origin + window.location.pathname + '?view=' + docRef.id;
+                    generateQRCode(shareUrl);
+                    
+                } catch (err) {
+                    console.error("Save photo err:", err);
+                    generateQRCode(window.location.href); // Fallback dummy QR
+                }
+            } else {
+                // 離線模式：直接產生目前的網址 QR Code
+                generateQRCode(window.location.href);
             }
         }
 
