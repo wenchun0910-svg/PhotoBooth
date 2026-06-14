@@ -282,7 +282,7 @@
         // ==========================================
         // 初始化 Firebase
         // ==========================================
-    const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -291,6 +291,9 @@
   appId: "1:948611804541:web:7503665164cc4ac6907014"
 };
 
+        
+        // 給您的拍貼機取一個專屬的 ID
+        appId = 'my-custom-photo-booth';
 
         try {
             const app = initializeApp(firebaseConfig);
