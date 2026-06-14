@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雲端智能拍貼機</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        /* 閃光燈特效 */
+        #flash-overlay {
+            transition: opacity 0.1s ease-out;
+            pointer-events: none;
+        }
+        /* 隱藏捲軸但可滾動 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-pink-50 min-h-screen text-gray-800 flex flex-col overflow-hidden">
+
+    <!-- 全局載入畫面 -->
+    <div id="global-loading" class="flex-1 flex flex-col items-center justify-center absolute inset-0 z-50 bg-pink-50">
+        <i class="fa-solid fa-spinner fa-spin text-5xl text-pink-500 mb-4"></i>
+        <p class="text-gray-600 font-bold tracking-widest text-lg">系統啟動中...</p>
+    </div>
+
+    <!-- 主視圖：拍貼機畫面 -->
+    <div id="view-booth" class="flex-1 flex flex-col items-center justify-center p-4 relative hidden">
+        <h1 class="text-3xl md:text-4xl font-bold text-pink-500 mb-4 tracking-wider"><i class="fa-solid fa-camera-retro"></i> 智能拍貼機</h1>
+        
+        <!-- 相機與畫布容器 -->
+        <div class="relative w-full max-w-md aspect-square bg-gray-900 rounded-3xl shadow-2xl overflow-hidden ring-4 ring-white">
+            <video id="webcam" autoplay playsinline class="hidden"></video>
+            <canvas id="output_canvas" class="w-full h-full object-cover"></canvas>
+            
+            <!-- 閃光燈 -->
+            <div id="flash-overlay" class="absolute inset-0 bg-white opacity-0 z-50"></div>
+            
+            <!-- 倒數計時文字 -->
+            <div id="countdown-text" class="absolute inset-0 flex items-center justify-center text-white text-9xl font-bold drop-shadow-lg opacity-0 z-40" style="text-shadow: 0 4px 10px rgba(0,0,0,0.5);"></div>
+            
+            <!-- 載入中狀態 -->
+            <div id="loading-state" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 text-white z-30">
+                <i class="fa-solid fa-spinner fa-spin text-4xl mb-3"></i>
+                <p id="loading-text" class="text-sm">正在初始化相機與 AI...</p>
+            </div>
+
+            <!-- 手勢提示 -->
+            <div id="gesture-hint" class="absolute top-4 left-0 right-0 text-center z-20 pointer-events-none hidden">
+                <span class="bg-black bg-opacity-50 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm">
+                    <i class="fa-solid fa-hand text-yellow-300"></i> 對鏡頭比 🖐 開始自拍
+                </span>
+            </div>
+        </div>
+
+        <!-- 控制按鈕 -->
+        <div class="mt-8 flex items-center gap-6 z-10">
+            <button id="btn-prev-frame" class="w-12 h-12 bg-white rounded-full shadow-md text-pink-500 hover:bg-pink-50 transition flex items-center justify-center text-xl">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button id="btn-take-photo" class="w-20 h-20 bg-pink-500 rounded-full shadow-xl text-white hover:bg-pink-600 transition flex items-center justify-center border-4 border-white transform hover:scale-105">
+                <i class="fa-solid fa-camera text-3xl"></i>
+            </button>
+            <button id="btn-next-frame" class="w-12 h-12 bg-white rounded-full shadow-md text-pink-500 hover:bg-pink-50 transition flex items-center justify-center text-xl">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+        <p class="mt-4 text-gray-500 text-sm">點擊按鈕更換邊框</p>
+
+        <!-- 管理員入口 -->
+        <button id="btn-go-admin" class="absolute bottom-4 right-4 text-gray-400 hover:text-pink-500 transition text-sm">
+            <i class="fa-solid fa-gear"></i> 管理員
+        </button>
+    </div>
+
+    <!-- 拍攝結果與下載視圖 -->
+    <div id="view-result" class="flex-1 flex flex-col items-center justify-center p-4 relative hidden">
+        <div class="glass-panel p-6 md:p-10 rounded-3xl shadow-2xl max-w-2xl w-full flex flex-col md:flex-row gap-8 items-center">
+            <!-- 照片預覽 -->
+            <div class="w-full md:w-1/2 flex flex-col items-center">
+                <img id="result-image" class="w-full aspect-square object-cover rounded-xl shadow-md border-4 border-white" src="" alt="拍攝結果">
+            </div>
+            
+            <!-- QR Code 與資訊 -->
+            <div class="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">拍攝完成！✨</h2>
+                <p class="text-gray-600 mb-6">掃描下方 QRCode 或點擊按鈕儲存這份美好回憶。</p>
+                
+                <div class="bg-white p-4 rounded-xl shadow-inner mb-6 inline-block">
+                    <div id="qrcode"></div>
+                </div>
+
+                <div class="flex gap-4 w-full justify-center md:justify-start">
+                    <button id="btn-retake" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-full font-semibold hover:bg-gray-300 transition w-1/2 md:w-auto">
+                        <i class="fa-solid fa-arrow-rotate-left mr-2"></i> 重拍
+                    </button>
+                    <button id="btn-download" class="px-6 py-3 bg-pink-500 text-white rounded-full font-semibold hover:bg-pink-600 transition shadow-lg w-1/2 md:w-auto">
+                        <i class="fa-solid fa-download mr-2"></i> 下載
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 單純瀏覽照片視圖 (從 QR Code 掃描進來) -->
+    <div id="view-shared" class="flex-1 flex flex-col items-center justify-center p-4 bg-gray-900 hidden">
+        <div class="max-w-md w-full flex flex-col items-center gap-6">
+            <h1 class="text-white text-2xl font-bold tracking-widest text-center">✨ 回憶珍藏 ✨</h1>
+            <div id="shared-loading" class="text-white"><i class="fa-solid fa-spinner fa-spin text-3xl"></i></div>
+            <img id="shared-image" class="w-full aspect-square object-cover rounded-xl shadow-2xl border-4 border-white hidden" src="" alt="Shared Photo">
+            <button id="btn-shared-download" class="hidden w-full py-4 bg-pink-500 text-white rounded-full font-bold text-lg hover:bg-pink-600 transition shadow-lg mt-4">
+                <i class="fa-solid fa-download mr-2"></i> 儲存照片至手機
+            </button>
+            <a href="?" class="text-gray-400 hover:text-white underline mt-4">我也想拍一張！</a>
+        </div>
+    </div>
+
+    <!-- 管理員登入視窗 -->
+    <div id="modal-admin-login" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative">
+            <button id="btn-close-login" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h2 id="login-title" class="text-2xl font-bold text-center text-gray-800 mb-6">管理員登入</h2>
+            
+            <form id="form-login" class="flex flex-col gap-4">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">電子郵件</label>
+                    <input type="email" id="login-email" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">密碼</label>
+                    <input type="password" id="login-password" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
+                </div>
+                <button type="submit" id="btn-submit-login" class="w-full bg-gray-800 text-white py-3 rounded-xl font-bold hover:bg-gray-900 transition mt-2">
+                    登入
+                </button>
+            </form>
+            <div class="mt-4 text-center text-sm text-gray-500">
+                <span id="login-toggle-text">沒有帳號？</span> 
+                <button id="btn-toggle-auth-mode" class="text-pink-500 font-bold hover:underline">立即註冊</button>
+            </div>
+            <p id="login-error" class="text-red-500 text-xs text-center mt-3 hidden"></p>
+        </div>
+    </div>
+
+    <!-- 管理員控制台 -->
+    <div id="view-admin-dashboard" class="flex-1 flex flex-col bg-gray-50 hidden h-screen overflow-hidden">
+        <!-- 頂部導航 -->
+        <header class="bg-white shadow-sm px-6 py-4 flex justify-between items-center z-10">
+            <h1 class="text-2xl font-bold text-gray-800"><i class="fa-solid fa-user-shield text-pink-500 mr-2"></i> 後台管理</h1>
+            <div class="flex gap-4 items-center">
+                <button id="btn-admin-home" class="text-gray-600 hover:text-pink-500 px-3 py-1"><i class="fa-solid fa-house"></i> 回首頁</button>
+                <button id="btn-logout" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-300">登出</button>
+            </div>
+        </header>
+
+        <!-- 內容區 -->
+        <div class="flex-1 overflow-auto p-6">
+            <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- 照片管理區 (佔2欄) -->
+                <div class="lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 border border-gray-100">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">雲端照片庫</h2>
+                    <div id="admin-photos-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 no-scrollbar overflow-y-auto max-h-[70vh] p-2">
+                        <!-- 照片動態生成 -->
+                        <div class="col-span-full text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin"></i> 載入中...</div>
+                    </div>
+                </div>
+
+                <!-- 邊框管理區 (佔1欄) -->
+                <div class="bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col h-fit">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">邊框管理</h2>
+                    
+                    <form id="form-add-frame" class="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <h3 class="text-sm font-bold text-gray-700 mb-2">新增邊框 (圖片網址)</h3>
+                        <input type="text" id="new-frame-name" placeholder="邊框名稱 (選填)" class="w-full text-sm px-3 py-2 border rounded-lg mb-2 focus:outline-none focus:ring-1 focus:ring-pink-300">
+                        <textarea id="new-frame-url" required placeholder="輸入圖片 URL 或 Base64 格式" class="w-full text-sm px-3 py-2 border rounded-lg mb-3 focus:outline-none focus:ring-1 focus:ring-pink-300 h-20 resize-none"></textarea>
+                        <p class="text-xs text-gray-500 mb-3"><i class="fa-solid fa-circle-info"></i> 建議使用透明背景的 PNG 或 Base64 (需支援跨域)</p>
+                        <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-pink-600 transition">新增邊框</button>
+                    </form>
+
+                    <div class="flex-1 overflow-y-auto no-scrollbar max-h-[50vh]">
+                        <ul id="admin-frames-list" class="flex flex-col gap-3">
+                            <!-- 邊框清單動態生成 -->
+                            <li class="text-center text-gray-400 py-4"><i class="fa-solid fa-spinner fa-spin"></i> 載入中...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // ---------------------------------------------------------
+        // 1. Firebase 模組載入 (符合單一檔案與安全規則限制)
+        // ---------------------------------------------------------
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDoc, doc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        
+        // ---------------------------------------------------------
+        // 2. MediaPipe 模組載入 (用於手勢辨識)
+        // ---------------------------------------------------------
+        import { GestureRecognizer, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.js";
+
+        // ==========================================
+        // 系統與狀態變數
+        // ==========================================
+        let db, auth, appId, currentUserId = null;
+        let unsubscribePhotos = null;
+        let unsubscribeFrames = null;
+        
+        // UI 狀態
+        let currentMode = 'init'; // 'booth', 'result', 'shared', 'admin'
+        let isAuthModeLogin = true;
+
+        // 拍貼機狀態
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('output_canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        
+        // 設定畫布解析度為 1:1 (正方形)
+        const CANVAS_SIZE = 800; 
+        canvas.width = CANVAS_SIZE;
+        canvas.height = CANVAS_SIZE;
+
+        let frames = []; // 儲存資料庫撈回的邊框
+        let currentFrameIndex = 0;
+        let currentFrameImage = new Image();
+        
+        let gestureRecognizer = null;
+        let isWebcamRunning = false;
+        let isCountingDown = false;
+        let animationFrameId = null;
+        let lastVideoTime = -1;
+
+        // ==========================================
+        // 初始化 Firebase (必要規則)
+        // ==========================================
+        let firebaseConfig = { apiKey: "dummy", projectId: "dummy", appId: "dummy" };
+        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+            try { firebaseConfig = JSON.parse(__firebase_config); } catch(e){}
+        }
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        appId = typeof __app_id !== 'undefined' ? __app_id : 'default-photo-booth';
+
+        // ==========================================
+        // 生成預設邊框 (Base64 SVG，避免跨域污染畫布問題)
+        // ==========================================
+        const btoaUTF8 = (str) => btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
+        
+        const defaultFrame1 = `data:image/svg+xml;base64,` + btoaUTF8(`
+            <svg width="800" height="800" xmlns="http://www.w3.org/2000/svg">
+                <rect x="20" y="20" width="760" height="760" fill="none" stroke="#ffffff" stroke-width="30" rx="15" />
+                <path d="M0,0 L150,0 L0,150 Z" fill="#ff69b4" opacity="0.8"/>
+                <path d="M800,0 L650,0 L800,150 Z" fill="#ffb6c1" opacity="0.8"/>
+                <path d="M0,800 L150,800 L0,650 Z" fill="#ffb6c1" opacity="0.8"/>
+                <path d="M800,800 L650,800 L800,650 Z" fill="#ff69b4" opacity="0.8"/>
+                <text x="400" y="750" font-family="sans-serif" font-size="40" fill="white" text-anchor="middle" font-weight="900" letter-spacing="5" style="text-shadow: 2px 2px 0px #ff69b4;">LOVE MOMENT</text>
+            </svg>
+        `);
+        
+        const defaultFrame2 = `data:image/svg+xml;base64,` + btoaUTF8(`
+            <svg width="800" height="800" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="0" width="800" height="800" fill="none" stroke="#222" stroke-width="40" />
+                <rect x="30" y="30" width="740" height="740" fill="none" stroke="white" stroke-width="5" stroke-dasharray="20,10" />
+                <text x="400" y="760" font-family="monospace" font-size="30" fill="white" text-anchor="middle" font-weight="bold" background="black">/// FILM STRIP ///</text>
+            </svg>
+        `);
+
+        // ==========================================
+        // 核心邏輯 - 路由與初始化
+        // ==========================================
+        async function initApp() {
+            // 檢查 URL 參數是否為分享模式
+            const urlParams = new URLSearchParams(window.location.search);
+            const viewDocId = urlParams.get('view');
+
+            // --- 遵守 Auth 規則：第一步必須處理認證 ---
+            const initAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (err) {
+                    console.error("Auth Init Error:", err);
+                    // 認證失敗時不中斷，讓系統可以進入離線預覽模式
+                }
+            };
+            await initAuth();
+
+            // 監聽登入狀態
+            onAuthStateChanged(auth, (user) => {
+                currentUserId = user ? user.uid : null;
+                // 無論登入是否成功，都要切換畫面，避免卡在白畫面
+                if (viewDocId) {
+                    setupSharedView(viewDocId);
+                } else if (currentMode === 'init' || currentMode === 'booth') {
+                    setupBoothMode();
+                } else if (currentMode === 'admin') {
+                    setupAdminDashboard();
+                }
+            });
+
+            // 防呆機制：若 Firebase 連線逾時，強制載入畫面
+            setTimeout(() => {
+                if (currentMode === 'init') {
+                    console.warn("登入檢查逾時，進入離線模式");
+                    if (viewDocId) setupSharedView(viewDocId);
+                    else setupBoothMode();
+                }
+            }, 3000);
+        }
+
+        // ==========================================
+        // 視圖切換 Helper
+        // ==========================================
+        function switchView(viewId) {
+            const globalLoading = document.getElementById('global-loading');
+            if (globalLoading) globalLoading.classList.add('hidden');
+            
+            document.getElementById('view-booth').classList.add('hidden');
+            document.getElementById('view-result').classList.add('hidden');
+            document.getElementById('view-shared').classList.add('hidden');
+            document.getElementById('view-admin-dashboard').classList.add('hidden');
+            document.getElementById('modal-admin-login').classList.add('hidden');
+            
+            if (viewId) {
+                document.getElementById(viewId).classList.remove('hidden');
+            }
+        }
+
+        // ==========================================
+        // 模式1：分享視圖 (僅瀏覽特定照片)
+        // ==========================================
+        async function setupSharedView(docId) {
+            currentMode = 'shared';
+            switchView('view-shared');
+            
+            try {
+                // 遵守資料庫路徑規則
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'photos', docId);
+                const docSnap = await getDoc(docRef);
+                
+                document.getElementById('shared-loading').classList.add('hidden');
+                const imgEl = document.getElementById('shared-image');
+                const btnDl = document.getElementById('btn-shared-download');
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    imgEl.src = data.imageData;
+                    imgEl.classList.remove('hidden');
+                    btnDl.classList.remove('hidden');
+                    
+                    btnDl.onclick = () => {
+                        const a = document.createElement('a');
+                        a.href = data.imageData;
+                        a.download = `photo-${Date.now()}.jpg`;
+                        a.click();
+                    };
+                } else {
+                    document.getElementById('shared-loading').innerHTML = "找不到該照片 😢<br><span class='text-sm mt-2 block'>可能已被刪除</span>";
+                    document.getElementById('shared-loading').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("Fetch shared photo err:", err);
+            }
+        }
+
+        // ==========================================
+        // 模式2：拍貼機主模式
+        // ==========================================
+        async function setupBoothMode() {
+            currentMode = 'booth';
+            switchView('view-booth');
+            
+            // 監聽邊框資料 (只需載入一次或保持監聽)
+            if (!unsubscribeFrames) {
+                const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
+                unsubscribeFrames = onSnapshot(framesRef, (snapshot) => {
+                    frames = [];
+                    snapshot.forEach(doc => frames.push({ id: doc.id, ...doc.data() }));
+                    
+                    // 如果資料庫沒邊框，塞預設的
+                    if (frames.length === 0) {
+                        frames = [
+                            { id: 'def1', url: defaultFrame1, name: 'Love Moment' },
+                            { id: 'def2', url: defaultFrame2, name: 'Film Strip' }
+                        ];
+                    }
+                    
+                    if (currentFrameIndex >= frames.length) currentFrameIndex = 0;
+                    updateFrameImage();
+                }, (err) => console.error("Frames listener err:", err));
+            }
+
+            // 初始化設備與 AI
+            await initMediaPipe();
+            await startWebcam();
+        }
+
+        function updateFrameImage() {
+            if (frames.length > 0) {
+                currentFrameImage.crossOrigin = "anonymous"; // 允許跨域圖片
+                currentFrameImage.src = frames[currentFrameIndex].url;
+            } else {
+                currentFrameImage.src = "";
+            }
+        }
+
+        // --- 初始化 MediaPipe (手勢辨識) ---
+        async function initMediaPipe() {
+            if (gestureRecognizer) return; // 已經載入過
+            try {
+                const vision = await FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+                );
+                gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
+                        delegate: "GPU"
+                    },
+                    runningMode: "VIDEO"
+                });
+                console.log("MediaPipe initialized");
+                document.getElementById('gesture-hint').classList.remove('hidden');
+            } catch (err) {
+                console.error("MediaPipe initialization failed:", err);
+                document.getElementById('loading-text').innerText = "手勢辨識載入失敗，請使用按鈕拍照";
+            }
+        }
+
+        // --- 啟動相機 ---
+        async function startWebcam() {
+            if (isWebcamRunning) return;
+            try {
+                const constraints = { video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                
+                video.addEventListener('loadeddata', () => {
+                    document.getElementById('loading-state').classList.add('hidden');
+                    isWebcamRunning = true;
+                    requestAnimationFrame(renderLoop);
+                });
+            } catch (err) {
+                console.error("Camera access denied:", err);
+                document.getElementById('loading-text').innerText = "無法存取相機，請確認權限";
+            }
+        }
+
+        // --- 主渲染循環 (繪製畫面 + 辨識手勢) ---
+        function renderLoop() {
+            if (!isWebcamRunning || currentMode !== 'booth') return;
+
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+                // 清空畫布
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const size = Math.min(video.videoWidth, video.videoHeight);
+                const startX = (video.videoWidth - size) / 2;
+                const startY = (video.videoHeight - size) / 2;
+                
+                // 畫照片 (需要左右鏡像)
+                ctx.save();
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, startX, startY, size, size, 0, 0, canvas.width, canvas.height);
+                ctx.restore();
+
+                // 畫邊框 (不需要鏡像)
+                if (currentFrameImage.complete && currentFrameImage.src) {
+                    try {
+                        ctx.drawImage(currentFrameImage, 0, 0, canvas.width, canvas.height);
+                    } catch (e) {
+                        console.warn("Canvas Tainted by CORS frame");
+                    }
+                }
+            }
+
+            // 手勢辨識
+            let nowInMs = Date.now();
+            if (video.currentTime !== lastVideoTime && gestureRecognizer && !isCountingDown) {
+                lastVideoTime = video.currentTime;
+                const results = gestureRecognizer.recognizeForVideo(video, nowInMs);
+                
+                if (results.gestures.length > 0) {
+                    const categoryName = results.gestures[0][0].categoryName;
+                    if (categoryName === "Open_Palm") {
+                        startCountdown();
+                    }
+                }
+            }
+
+            animationFrameId = requestAnimationFrame(renderLoop);
+        }
+
+        // --- 倒數與拍照 ---
+        async function startCountdown() {
+            if (isCountingDown) return;
+            isCountingDown = true;
+            document.getElementById('gesture-hint').classList.add('hidden');
+            
+            const cdText = document.getElementById('countdown-text');
+            cdText.classList.remove('opacity-0');
+            
+            for (let i = 3; i > 0; i--) {
+                cdText.innerText = i;
+                // 放大動畫效果
+                cdText.style.transform = 'scale(0.5)';
+                setTimeout(() => cdText.style.transform = 'scale(1.5)', 50);
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            
+            cdText.innerText = "";
+            cdText.classList.add('opacity-0');
+            
+            takePhoto();
+        }
+
+        async function takePhoto() {
+            // 閃光燈特效
+            const flash = document.getElementById('flash-overlay');
+            flash.style.opacity = '1';
+            setTimeout(() => flash.style.opacity = '0', 150);
+
+            // 取得 Base64 影像資料 (使用 JPEG 降低檔案大小以符合 Firestore 限制)
+            // Quality 0.7，對於 800x800 的圖片約在 50KB~100KB 左右，非常安全。
+            const imageData = canvas.toDataURL('image/jpeg', 0.7);
+            
+            isCountingDown = false; // 重置狀態
+            
+            // 進入處理畫面
+            showResultView(imageData);
+            
+            // 儲存至 Firebase (背景執行)
+            try {
+                if(!currentUserId) throw new Error("尚未認證");
+                const photosRef = collection(db, 'artifacts', appId, 'public', 'data', 'photos');
+                const docRef = await addDoc(photosRef, {
+                    imageData: imageData,
+                    timestamp: Date.now(),
+                    userId: currentUserId
+                });
+                
+                // 產生分享用網址與 QR Code
+                const shareUrl = window.location.origin + window.location.pathname + '?view=' + docRef.id;
+                generateQRCode(shareUrl);
+                
+            } catch (err) {
+                console.error("Save photo err:", err);
+                alert("儲存至雲端失敗，但您仍可手動下載。");
+                generateQRCode(window.location.href); // Fallback dummy QR
+            }
+        }
+
+        function showResultView(imageData) {
+            currentMode = 'result';
+            switchView('view-result');
+            document.getElementById('result-image').src = imageData;
+            document.getElementById('qrcode').innerHTML = ""; // 清空之前的 QR
+            
+            // 設定下載按鈕
+            document.getElementById('btn-download').onclick = () => {
+                const a = document.createElement('a');
+                a.href = imageData;
+                a.download = `photobooth-${Date.now()}.jpg`;
+                a.click();
+            };
+        }
+
+        function generateQRCode(url) {
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById('qrcode'), {
+                text: url,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.L
+            });
+        }
+
+        // ==========================================
+        // UI 事件綁定 (Booth & Result)
+        // ==========================================
+        document.getElementById('btn-prev-frame').addEventListener('click', () => {
+            if (frames.length === 0) return;
+            currentFrameIndex = (currentFrameIndex - 1 + frames.length) % frames.length;
+            updateFrameImage();
+        });
+
+        document.getElementById('btn-next-frame').addEventListener('click', () => {
+            if (frames.length === 0) return;
+            currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+            updateFrameImage();
+        });
+
+        document.getElementById('btn-take-photo').addEventListener('click', () => {
+            if (!isCountingDown) startCountdown();
+        });
+
+        document.getElementById('btn-retake').addEventListener('click', () => {
+            setupBoothMode();
+            document.getElementById('gesture-hint').classList.remove('hidden');
+        });
+
+
+        // ==========================================
+        // 管理員系統 (登入與後台)
+        // ==========================================
+        
+        // 打開登入視窗
+        document.getElementById('btn-go-admin').addEventListener('click', () => {
+            // 如果已經是登入狀態且有權限(這裡簡單判定有 Email 就算管理員)
+            if (auth.currentUser && auth.currentUser.email) {
+                setupAdminDashboard();
+            } else {
+                switchView('modal-admin-login');
+                document.getElementById('view-booth').classList.remove('hidden'); // 保持背景
+            }
+        });
+
+        document.getElementById('btn-close-login').addEventListener('click', () => {
+            document.getElementById('modal-admin-login').classList.add('hidden');
+        });
+
+        // 登入/註冊切換
+        document.getElementById('btn-toggle-auth-mode').addEventListener('click', () => {
+            isAuthModeLogin = !isAuthModeLogin;
+            const title = document.getElementById('login-title');
+            const submitBtn = document.getElementById('btn-submit-login');
+            const toggleText = document.getElementById('login-toggle-text');
+            const toggleBtn = document.getElementById('btn-toggle-auth-mode');
+            
+            if (isAuthModeLogin) {
+                title.innerText = "管理員登入";
+                submitBtn.innerText = "登入";
+                toggleText.innerText = "沒有帳號？";
+                toggleBtn.innerText = "立即註冊";
+            } else {
+                title.innerText = "註冊管理員";
+                submitBtn.innerText = "建立帳號";
+                toggleText.innerText = "已有帳號？";
+                toggleBtn.innerText = "返回登入";
+            }
+        });
+
+        // 提交表單
+        document.getElementById('form-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pwd = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            errorEl.classList.add('hidden');
+
+            try {
+                if (isAuthModeLogin) {
+                    await signInWithEmailAndPassword(auth, email, pwd);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, pwd);
+                }
+                // 成功後會觸發 onAuthStateChanged，但我們可以直接進 Dashboard
+                setupAdminDashboard();
+            } catch (err) {
+                errorEl.innerText = isAuthModeLogin ? "登入失敗：請檢查帳號密碼" : "註冊失敗：密碼過短或信箱已存在";
+                errorEl.classList.remove('hidden');
+            }
+        });
+
+        // 進入後台
+        async function setupAdminDashboard() {
+            currentMode = 'admin';
+            switchView('view-admin-dashboard');
+
+            if (!currentUserId) return; // 安全防護
+
+            // 監聽所有照片 (遵守規則不使用 orderBy，在 JS 排序)
+            const photosRef = collection(db, 'artifacts', appId, 'public', 'data', 'photos');
+            if(unsubscribePhotos) unsubscribePhotos();
+            
+            unsubscribePhotos = onSnapshot(photosRef, (snapshot) => {
+                let photos = [];
+                snapshot.forEach(doc => photos.push({ id: doc.id, ...doc.data() }));
+                
+                // 在 Memory 中排序
+                photos.sort((a, b) => b.timestamp - a.timestamp);
+                renderAdminPhotos(photos);
+            }, (err) => console.error("Admin photos err:", err));
+
+            // 邊框監聽已經在 booth 模式啟動過，這裡我們重複利用 frames 變數來渲染
+            // 為了確保後台也能即時看到，再綁定一次專屬後台的渲染
+            const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
+            onSnapshot(framesRef, (snapshot) => {
+                let localFrames = [];
+                snapshot.forEach(doc => localFrames.push({ id: doc.id, ...doc.data() }));
+                renderAdminFrames(localFrames);
+            }, (err) => console.error("Admin frames err:", err));
+        }
+
+        // 渲染照片列表
+        function renderAdminPhotos(photos) {
+            const grid = document.getElementById('admin-photos-grid');
+            grid.innerHTML = '';
+            
+            if (photos.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center text-gray-400 py-10">尚無照片記錄</div>';
+                return;
+            }
+
+            photos.forEach(photo => {
+                const dateStr = new Date(photo.timestamp).toLocaleString('zh-TW', { hour12: false });
+                const div = document.createElement('div');
+                div.className = "relative group rounded-xl overflow-hidden shadow-sm border";
+                div.innerHTML = `
+                    <img src="${photo.imageData}" class="w-full aspect-square object-cover" loading="lazy">
+                    <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2">
+                        <span class="text-white text-xs px-2 text-center">${dateStr}</span>
+                        <button class="bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 shadow btn-del-photo" data-id="${photo.id}">
+                            <i class="fa-solid fa-trash"></i> 刪除
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+
+            // 綁定刪除事件
+            document.querySelectorAll('.btn-del-photo').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    if(!confirm('確定要刪除這張照片嗎？')) return;
+                    const id = e.target.closest('button').dataset.id;
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'photos', id));
+                });
+            });
+        }
+
+        // 渲染邊框列表
+        function renderAdminFrames(localFrames) {
+            const list = document.getElementById('admin-frames-list');
+            list.innerHTML = '';
+            
+            if (localFrames.length === 0) {
+                list.innerHTML = '<li class="text-center text-gray-400 py-4 text-sm">目前無自訂邊框，將顯示預設邊框。</li>';
+                return;
+            }
+
+            localFrames.forEach(frame => {
+                const li = document.createElement('li');
+                li.className = "flex items-center gap-3 p-2 bg-gray-50 rounded-lg border";
+                // 使用 object-contain 顯示邊框預覽
+                li.innerHTML = `
+                    <div class="w-16 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0 relative checkerboard">
+                        <img src="${frame.url}" class="w-full h-full object-contain absolute inset-0 z-10">
+                    </div>
+                    <div class="flex-1 truncate text-sm font-semibold text-gray-700">
+                        ${frame.name || '未命名邊框'}
+                    </div>
+                    <button class="text-red-400 hover:text-red-600 p-2 btn-del-frame" data-id="${frame.id}">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                list.appendChild(li);
+            });
+
+            // 綁定刪除
+            document.querySelectorAll('.btn-del-frame').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.target.closest('button').dataset.id;
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'frames', id));
+                });
+            });
+        }
+
+        // 新增邊框表單
+        document.getElementById('form-add-frame').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('new-frame-name');
+            const urlInput = document.getElementById('new-frame-url');
+            const submitBtn = e.target.querySelector('button');
+            
+            const name = nameInput.value.trim();
+            const url = urlInput.value.trim();
+            
+            if(!url) return;
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "新增中...";
+
+            try {
+                const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
+                await addDoc(framesRef, {
+                    name: name,
+                    url: url,
+                    timestamp: Date.now()
+                });
+                nameInput.value = '';
+                urlInput.value = '';
+            } catch (err) {
+                console.error("Add frame error:", err);
+                alert("新增邊框失敗！");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "新增邊框";
+            }
+        });
+
+        // 登出與回首頁
+        document.getElementById('btn-logout').addEventListener('click', async () => {
+            await signOut(auth);
+            // 登出後退回匿名登入狀態，以利 public 區塊運作
+            await signInAnonymously(auth);
+            setupBoothMode();
+        });
+
+        document.getElementById('btn-admin-home').addEventListener('click', () => {
+            setupBoothMode();
+        });
+
+        // 注入一點 CSS 讓邊框預覽有透明棋盤格背景
+        const style = document.createElement('style');
+        style.textContent = `
+            .checkerboard {
+                background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%);
+                background-size: 10px 10px;
+                background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ==========================================
+        // 啟動入口
+        // ==========================================
+        window.addEventListener('load', initApp);
+
+    </script>
+</body>
+</html>
