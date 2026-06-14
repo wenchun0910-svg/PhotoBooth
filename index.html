@@ -430,8 +430,10 @@
         async function initMediaPipe() {
             if (gestureRecognizer) return; // 已經載入過
             try {
+                // 修復 404 錯誤：將路徑改為 /vision_bundle.mjs 並移除鎖定的舊版本號
+                const { GestureRecognizer, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs");
                 const vision = await FilesetResolver.forVisionTasks(
-                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm"
                 );
                 gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
                     baseOptions: {
