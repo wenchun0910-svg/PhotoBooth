@@ -247,10 +247,14 @@
         // ==========================================
         // 初始化 Firebase (必要規則)
         // ==========================================
-        let firebaseConfig = { apiKey: "dummy", projectId: "dummy", appId: "dummy" };
-        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-            try { firebaseConfig = JSON.parse(__firebase_config); } catch(e){}
-        }
+      const firebaseConfig = {
+  apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
+  authDomain: "photobooth-92401.firebaseapp.com",
+  projectId: "photobooth-92401",
+  storageBucket: "photobooth-92401.firebasestorage.app",
+  messagingSenderId: "948611804541",
+  appId: "1:948611804541:web:7503665164cc4ac6907014"
+};
         const app = initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
