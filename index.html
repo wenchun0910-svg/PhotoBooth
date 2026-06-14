@@ -26,6 +26,19 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
+
+    <!-- 極限防呆：若外部模組載入失敗，3秒後強制進入系統 -->
+    <script>
+        setTimeout(() => {
+            const loader = document.getElementById('global-loading');
+            if (loader && !loader.classList.contains('hidden')) {
+                loader.classList.add('hidden');
+                const booth = document.getElementById('view-booth');
+                if (booth) booth.classList.remove('hidden');
+                console.warn("連線逾時，強制啟動離線模式");
+            }
+        }, 3000);
+    </script>
 </head>
 <body class="bg-pink-50 min-h-screen text-gray-800 flex flex-col overflow-hidden">
 
@@ -42,6 +55,7 @@
         <!-- 相機與畫布容器 -->
         <div class="relative w-full max-w-md aspect-square bg-gray-900 rounded-3xl shadow-2xl overflow-hidden ring-4 ring-white">
             <video id="webcam" autoplay playsinline class="hidden"></video>
+            <!-- 移除 CSS 鏡像，改用 Canvas 繪製時處理，避免邊框文字顛倒 -->
             <canvas id="output_canvas" class="w-full h-full object-cover"></canvas>
             
             <!-- 閃光燈 -->
@@ -220,7 +234,6 @@
                         <p id="add-collab-msg" class="text-sm text-center mt-3 hidden"></p>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -236,7 +249,7 @@
         // ==========================================
         // 系統與狀態變數
         // ==========================================
-        let db, auth, appId, currentUserId = null;
+        let db = null, auth = null, appId, currentUserId = null;
         let unsubscribePhotos = null;
         let unsubscribeFrames = null;
         
@@ -266,7 +279,7 @@
         // ==========================================
         // 初始化 Firebase (必要規則)
         // ==========================================
-     const firebaseConfig = {
+       const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -274,14 +287,20 @@
   messagingSenderId: "948611804541",
   appId: "1:948611804541:web:7503665164cc4ac6907014"
 };
-        const app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-        appId = typeof __app_id !== 'undefined' ? __app_id : 'default-photo-booth';
+
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e) {
+            console.warn("Firebase 初始化失敗，將以離線模式運行:", e);
+        }
 
         // ==========================================
         // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
         // ==========================================
+        // ⚠️ 請在此處填入您部署完成的 Google Apps Script 網址
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
 
         // ==========================================
@@ -309,6 +328,12 @@
         `);
 
         // ==========================================
+        // 新增預設邊框 3：可愛海兔 (使用 GitHub 空間)
+        // ==========================================
+        // 若有正確上傳至 GitHub，請將此處替換為您的 Raw 網址
+        const defaultFrame3 = "https://raw.githubusercontent.com/您的帳號/專案名稱/main/可愛海兔去背版.png";
+
+        // ==========================================
         // 核心邏輯 - 路由與初始化
         // ==========================================
         async function initApp() {
@@ -316,33 +341,39 @@
             const urlParams = new URLSearchParams(window.location.search);
             const viewDocId = urlParams.get('view');
 
-            // --- 遵守 Auth 規則：第一步必須處理認證 ---
-            const initAuth = async () => {
-                try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
+            if (auth) {
+                // --- 遵守 Auth 規則：第一步必須處理認證 ---
+                const initAuth = async () => {
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (err) {
+                        console.error("Auth Init Error:", err);
+                        // 認證失敗時不中斷，讓系統可以進入離線預覽模式
                     }
-                } catch (err) {
-                    console.error("Auth Init Error:", err);
-                    // 認證失敗時不中斷，讓系統可以進入離線預覽模式
-                }
-            };
-            await initAuth();
+                };
+                await initAuth();
 
-            // 監聽登入狀態
-            onAuthStateChanged(auth, (user) => {
-                currentUserId = user ? user.uid : null;
-                // 無論登入是否成功，都要切換畫面，避免卡在白畫面
-                if (viewDocId) {
-                    setupSharedView(viewDocId);
-                } else if (currentMode === 'init' || currentMode === 'booth') {
-                    setupBoothMode();
-                } else if (currentMode === 'admin') {
-                    setupAdminDashboard();
-                }
-            });
+                // 監聽登入狀態
+                onAuthStateChanged(auth, (user) => {
+                    currentUserId = user ? user.uid : null;
+                    // 無論登入是否成功，都要切換畫面，避免卡在白畫面
+                    if (viewDocId) {
+                        setupSharedView(viewDocId);
+                    } else if (currentMode === 'init' || currentMode === 'booth') {
+                        setupBoothMode();
+                    } else if (currentMode === 'admin') {
+                        setupAdminDashboard();
+                    }
+                });
+            } else {
+                // 如果 Firebase 壞掉，直接進入畫面
+                if (viewDocId) setupSharedView(viewDocId);
+                else setupBoothMode();
+            }
 
             // 防呆機制：若 Firebase 連線逾時，強制載入畫面
             setTimeout(() => {
@@ -390,7 +421,7 @@
                 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    // 兼容新版 Cloud Storage 網址與舊版 Base64
+                    // 兼容新版 Drive 網址與舊版 Base64
                     imgEl.src = data.imageUrl || data.imageData;
                     imgEl.classList.remove('hidden');
                     btnDl.classList.remove('hidden');
@@ -418,28 +449,39 @@
             switchView('view-booth');
             
             // 監聽邊框資料 (只需載入一次或保持監聽)
-            if (!unsubscribeFrames) {
-                const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
-                unsubscribeFrames = onSnapshot(framesRef, (snapshot) => {
-                    frames = [];
-                    snapshot.forEach(doc => frames.push({ id: doc.id, ...doc.data() }));
-                    
-                    // 如果資料庫沒邊框，塞預設的
-                    if (frames.length === 0) {
-                        frames = [
-                            { id: 'def1', url: defaultFrame1, name: 'Love Moment' },
-                            { id: 'def2', url: defaultFrame2, name: 'Film Strip' }
-                        ];
-                    }
-                    
-                    if (currentFrameIndex >= frames.length) currentFrameIndex = 0;
-                    updateFrameImage();
-                }, (err) => console.error("Frames listener err:", err));
+            if (db && !unsubscribeFrames) {
+                try {
+                    const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
+                    unsubscribeFrames = onSnapshot(framesRef, (snapshot) => {
+                        frames = [];
+                        snapshot.forEach(doc => frames.push({ id: doc.id, ...doc.data() }));
+                        loadDefaultFramesIfEmpty();
+                    }, (err) => {
+                        console.error("Frames listener err:", err);
+                        loadDefaultFramesIfEmpty();
+                    });
+                } catch (e) {
+                    loadDefaultFramesIfEmpty();
+                }
+            } else if (!db) {
+                loadDefaultFramesIfEmpty();
             }
 
             // 初始化設備與 AI
             await initMediaPipe();
             await startWebcam();
+        }
+
+        function loadDefaultFramesIfEmpty() {
+            if (frames.length === 0) {
+                frames = [
+                    { id: 'def1', url: defaultFrame1, name: 'Love Moment' },
+                    { id: 'def2', url: defaultFrame2, name: 'Film Strip' },
+                    { id: 'def3', url: defaultFrame3, name: '可愛海兔' }
+                ];
+            }
+            if (currentFrameIndex >= frames.length) currentFrameIndex = 0;
+            updateFrameImage();
         }
 
         function updateFrameImage() {
@@ -459,7 +501,7 @@
         async function initMediaPipe() {
             if (gestureRecognizer) return; // 已經載入過
             try {
-                // 修復 404 錯誤：將路徑改為 /vision_bundle.mjs 並移除鎖定的舊版本號
+                // 動態載入 .mjs 模組，避免靜態 import 造成 404
                 const { GestureRecognizer, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs");
                 const vision = await FilesetResolver.forVisionTasks(
                     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm"
@@ -517,8 +559,8 @@
                 ctx.drawImage(video, startX, startY, size, size, 0, 0, canvas.width, canvas.height);
                 ctx.restore();
 
-                // 畫邊框 (不需要鏡像)
-                if (currentFrameImage.complete && currentFrameImage.src) {
+                // 畫邊框 (不需要鏡像，加入 naturalWidth 防呆確保圖片真的有載入成功)
+                if (currentFrameImage.complete && currentFrameImage.naturalWidth > 0) {
                     try {
                         ctx.drawImage(currentFrameImage, 0, 0, canvas.width, canvas.height);
                     } catch (e) {
@@ -574,7 +616,6 @@
             setTimeout(() => flash.style.opacity = '0', 150);
 
             // 取得 Base64 影像資料 (使用 JPEG 降低檔案大小以符合 Firestore 限制)
-            // Quality 0.7，對於 800x800 的圖片約在 50KB~100KB 左右，非常安全。
             const imageData = canvas.toDataURL('image/jpeg', 0.7);
             
             isCountingDown = false; // 重置狀態
@@ -582,7 +623,7 @@
             // 進入處理畫面
             showResultView(imageData);
             
-            // 儲存至 Firebase (背景執行)
+            // 儲存至 Firebase 與 Google Drive (背景執行)
             if (db && auth && currentUserId) {
                 try {
                     let finalImageUrl = imageData;
@@ -692,8 +733,7 @@
 
         // 打開登入視窗
         document.getElementById('btn-go-admin').addEventListener('click', () => {
-            // 如果已經是登入狀態且有權限(這裡簡單判定有 Email 就算管理員)
-            if (auth.currentUser && auth.currentUser.email) {
+            if (auth && auth.currentUser && auth.currentUser.email) {
                 setupAdminDashboard();
             } else {
                 switchView('modal-admin-login');
@@ -741,74 +781,6 @@
             }
         });
 
-        // 修改密碼表單提交
-        const formChangePassword = document.getElementById('form-change-password');
-        if (formChangePassword) {
-            formChangePassword.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const newPwd = document.getElementById('new-password').value;
-                const msgEl = document.getElementById('change-pwd-msg');
-                const btn = e.target.querySelector('button');
-                
-                msgEl.classList.add('hidden');
-                btn.disabled = true;
-                btn.innerText = "更新中...";
-
-                try {
-                    await updatePassword(auth.currentUser, newPwd);
-                    msgEl.innerText = "✅ 密碼更新成功！";
-                    msgEl.className = "text-sm text-center mt-3 text-green-600 font-bold";
-                    e.target.reset();
-                } catch (err) {
-                    console.error("修改密碼失敗:", err);
-                    msgEl.innerText = "❌ 更新失敗，安全驗證過期，請登出後再重新登入修改。";
-                    msgEl.className = "text-sm text-center mt-3 text-red-500 font-bold";
-                } finally {
-                    msgEl.classList.remove('hidden');
-                    btn.disabled = false;
-                    btn.innerText = "更新密碼";
-                }
-            });
-        }
-
-        // 新增協作者表單提交
-        const formAddCollaborator = document.getElementById('form-add-collaborator');
-        if (formAddCollaborator) {
-            formAddCollaborator.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const username = document.getElementById('new-collab-username').value;
-                const pwd = document.getElementById('new-collab-password').value;
-                const email = getFakeEmail(username);
-                const msgEl = document.getElementById('add-collab-msg');
-                const btn = e.target.querySelector('button');
-                
-                msgEl.classList.add('hidden');
-                btn.disabled = true;
-                btn.innerText = "建立中...";
-
-                try {
-                    // 使用 Secondary App 來建立帳號，避免把當前的管理員強制登出
-                    const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
-                    const secondaryAuth = getAuth(secondaryApp);
-                    
-                    await createUserWithEmailAndPassword(secondaryAuth, email, pwd);
-                    await signOut(secondaryAuth); // 建立完成後立刻登出次要實例，保持原本的主連線
-                    
-                    msgEl.innerText = "✅ 協作者建立成功！";
-                    msgEl.className = "text-sm text-center mt-3 text-green-600 font-bold";
-                    e.target.reset();
-                } catch (err) {
-                    console.error("建立協作者失敗:", err);
-                    msgEl.innerText = "❌ 建立失敗，可能帳號已存在或密碼太短(需6碼)。";
-                    msgEl.className = "text-sm text-center mt-3 text-red-500 font-bold";
-                } finally {
-                    msgEl.classList.remove('hidden');
-                    btn.disabled = false;
-                    btn.innerText = "建立協作者帳號";
-                }
-            });
-        }
-
         // 進入後台
         async function setupAdminDashboard() {
             currentMode = 'admin';
@@ -816,27 +788,25 @@
 
             if (!currentUserId) return; // 安全防護
 
-            // 監聽所有照片 (遵守規則不使用 orderBy，在 JS 排序)
-            const photosRef = collection(db, 'artifacts', appId, 'public', 'data', 'photos');
-            if(unsubscribePhotos) unsubscribePhotos();
-            
-            unsubscribePhotos = onSnapshot(photosRef, (snapshot) => {
-                let photos = [];
-                snapshot.forEach(doc => photos.push({ id: doc.id, ...doc.data() }));
+            // 監聽所有照片
+            if(db) {
+                const photosRef = collection(db, 'artifacts', appId, 'public', 'data', 'photos');
+                if(unsubscribePhotos) unsubscribePhotos();
                 
-                // 在 Memory 中排序
-                photos.sort((a, b) => b.timestamp - a.timestamp);
-                renderAdminPhotos(photos);
-            }, (err) => console.error("Admin photos err:", err));
+                unsubscribePhotos = onSnapshot(photosRef, (snapshot) => {
+                    let photos = [];
+                    snapshot.forEach(doc => photos.push({ id: doc.id, ...doc.data() }));
+                    photos.sort((a, b) => b.timestamp - a.timestamp);
+                    renderAdminPhotos(photos);
+                }, (err) => console.error("Admin photos err:", err));
 
-            // 邊框監聽已經在 booth 模式啟動過，這裡我們重複利用 frames 變數來渲染
-            // 為了確保後台也能即時看到，再綁定一次專屬後台的渲染
-            const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
-            onSnapshot(framesRef, (snapshot) => {
-                let localFrames = [];
-                snapshot.forEach(doc => localFrames.push({ id: doc.id, ...doc.data() }));
-                renderAdminFrames(localFrames);
-            }, (err) => console.error("Admin frames err:", err));
+                const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
+                onSnapshot(framesRef, (snapshot) => {
+                    let localFrames = [];
+                    snapshot.forEach(doc => localFrames.push({ id: doc.id, ...doc.data() }));
+                    renderAdminFrames(localFrames);
+                }, (err) => console.error("Admin frames err:", err));
+            }
         }
 
         // 渲染照片列表
@@ -906,10 +876,11 @@
             localFrames.forEach(frame => {
                 const li = document.createElement('li');
                 li.className = "flex items-center gap-3 p-2 bg-gray-50 rounded-lg border";
-                // 使用 object-contain 顯示邊框預覽
+                // 加入破圖防呆 (onerror)
                 li.innerHTML = `
-                    <div class="w-16 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0 relative checkerboard">
-                        <img src="${frame.url}" class="w-full h-full object-contain absolute inset-0 z-10">
+                    <div class="w-16 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0 relative checkerboard flex items-center justify-center">
+                        <i class="fa-solid fa-image-slash text-gray-400 absolute z-0 text-xl"></i>
+                        <img src="${frame.url}" class="w-full h-full object-contain absolute inset-0 z-10 bg-transparent" onerror="this.style.display='none'">
                     </div>
                     <div class="flex-1 truncate text-sm font-semibold text-gray-700">
                         ${frame.name || '未命名邊框'}
@@ -930,7 +901,7 @@
             });
         }
 
-        // 新增邊框表單
+        // 新增邊框表單 (加入網址有效性與 CORS 檢查)
         document.getElementById('form-add-frame').addEventListener('submit', async (e) => {
             e.preventDefault();
             const nameInput = document.getElementById('new-frame-name');
@@ -943,31 +914,113 @@
             if(!url) return;
 
             submitBtn.disabled = true;
-            submitBtn.innerText = "新增中...";
+            submitBtn.innerText = "驗證圖片中...";
 
-            try {
-                const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
-                await addDoc(framesRef, {
-                    name: name,
-                    url: url,
-                    timestamp: Date.now()
-                });
-                nameInput.value = '';
-                urlInput.value = '';
-            } catch (err) {
-                console.error("Add frame error:", err);
-                alert("新增邊框失敗！");
-            } finally {
+            // 預先載入圖片測試
+            const testImg = new Image();
+            testImg.crossOrigin = "anonymous"; 
+            
+            testImg.onload = async () => {
+                submitBtn.innerText = "新增中...";
+                try {
+                    const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
+                    await addDoc(framesRef, {
+                        name: name,
+                        url: url,
+                        timestamp: Date.now()
+                    });
+                    nameInput.value = '';
+                    urlInput.value = '';
+                } catch (err) {
+                    console.error("Add frame error:", err);
+                    alert("新增邊框失敗！");
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "新增邊框";
+                }
+            };
+
+            testImg.onerror = () => {
+                alert("❌ 圖片載入失敗或被阻擋！\n\n原因可能是：\n1. 網址不是「直接圖片連結」 (.png 結尾)。\n2. 該網站有「防盜鏈」機制，不允許拍貼機讀取。\n\n💡 建議解法：請將圖片上傳至 GitHub、Imgur 圖床並複製「直接連結」，或是轉成「Base64 字串」。");
                 submitBtn.disabled = false;
                 submitBtn.innerText = "新增邊框";
-            }
+            };
+
+            testImg.src = url;
         });
+
+        // 修改密碼表單提交
+        const formChangePassword = document.getElementById('form-change-password');
+        if (formChangePassword) {
+            formChangePassword.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newPwd = document.getElementById('new-password').value;
+                const msgEl = document.getElementById('change-pwd-msg');
+                const btn = e.target.querySelector('button');
+                
+                msgEl.classList.add('hidden');
+                btn.disabled = true;
+                btn.innerText = "更新中...";
+
+                try {
+                    await updatePassword(auth.currentUser, newPwd);
+                    msgEl.innerText = "✅ 密碼更新成功！";
+                    msgEl.className = "text-sm text-center mt-3 text-green-600 font-bold";
+                    e.target.reset();
+                } catch (err) {
+                    console.error("修改密碼失敗:", err);
+                    msgEl.innerText = "❌ 更新失敗，安全驗證過期，請登出後再重新登入修改。";
+                    msgEl.className = "text-sm text-center mt-3 text-red-500 font-bold";
+                } finally {
+                    msgEl.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerText = "更新密碼";
+                }
+            });
+        }
+
+        // 新增協作者表單提交
+        const formAddCollaborator = document.getElementById('form-add-collaborator');
+        if (formAddCollaborator) {
+            formAddCollaborator.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('new-collab-username').value;
+                const pwd = document.getElementById('new-collab-password').value;
+                const email = getFakeEmail(username);
+                const msgEl = document.getElementById('add-collab-msg');
+                const btn = e.target.querySelector('button');
+                
+                msgEl.classList.add('hidden');
+                btn.disabled = true;
+                btn.innerText = "建立中...";
+
+                try {
+                    // 使用 Secondary App 來建立帳號，避免把當前的管理員強制登出
+                    const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+                    const secondaryAuth = getAuth(secondaryApp);
+                    
+                    await createUserWithEmailAndPassword(secondaryAuth, email, pwd);
+                    await signOut(secondaryAuth); // 建立完成後立刻登出次要實例
+                    
+                    msgEl.innerText = "✅ 協作者建立成功！";
+                    msgEl.className = "text-sm text-center mt-3 text-green-600 font-bold";
+                    e.target.reset();
+                } catch (err) {
+                    console.error("建立協作者失敗:", err);
+                    msgEl.innerText = "❌ 建立失敗，可能帳號已存在或密碼太短(需6碼)。";
+                    msgEl.className = "text-sm text-center mt-3 text-red-500 font-bold";
+                } finally {
+                    msgEl.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerText = "建立協作者帳號";
+                }
+            });
+        }
 
         // 登出與回首頁
         document.getElementById('btn-logout').addEventListener('click', async () => {
-            await signOut(auth);
-            // 登出後退回匿名登入狀態，以利 public 區塊運作
-            await signInAnonymously(auth);
+            if(auth) await signOut(auth);
+            if(auth) await signInAnonymously(auth);
             setupBoothMode();
         });
 
