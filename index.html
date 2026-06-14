@@ -208,11 +208,6 @@
         import { getAuth, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDoc, doc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         
-        // ---------------------------------------------------------
-        // 2. MediaPipe 模組載入 (用於手勢辨識)
-        // ---------------------------------------------------------
-        import { GestureRecognizer, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.js";
-
         // ==========================================
         // 系統與狀態變數
         // ==========================================
@@ -247,7 +242,7 @@
         // ==========================================
         // 初始化 Firebase (必要規則)
         // ==========================================
-      const firebaseConfig = {
+       const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
