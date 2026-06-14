@@ -138,12 +138,12 @@
             
             <form id="form-login" class="flex flex-col gap-4">
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1">電子郵件</label>
-                    <input type="email" id="login-email" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
+                    <label class="block text-sm text-gray-600 mb-1">帳號</label>
+                    <input type="text" id="login-username" placeholder="預設: admin" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">密碼</label>
-                    <input type="password" id="login-password" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
+                    <input type="password" id="login-password" placeholder="預設: admin123" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
                 </div>
                 <button type="submit" id="btn-submit-login" class="w-full bg-gray-800 text-white py-3 rounded-xl font-bold hover:bg-gray-900 transition mt-2">
                     登入
@@ -199,11 +199,21 @@
                         </div>
                     </div>
 
+                    <!-- 修改密碼區 -->
+                    <div class="bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col h-fit">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">修改密碼</h2>
+                        <form id="form-change-password" class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <input type="password" id="new-password" required placeholder="輸入新密碼 (至少6碼)" class="w-full text-sm px-3 py-2 border rounded-lg mb-3 focus:outline-none focus:ring-1 focus:ring-pink-300">
+                            <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-pink-600 transition">更新密碼</button>
+                        </form>
+                        <p id="change-pwd-msg" class="text-sm text-center mt-3 hidden"></p>
+                    </div>
+
                     <!-- 協作者管理區 -->
                     <div class="bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col h-fit">
                         <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">新增協作者</h2>
                         <form id="form-add-collaborator" class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                            <input type="email" id="new-collab-email" required placeholder="協作者信箱" class="w-full text-sm px-3 py-2 border rounded-lg mb-2 focus:outline-none focus:ring-1 focus:ring-pink-300">
+                            <input type="text" id="new-collab-username" required placeholder="協作者帳號 (如: user1)" class="w-full text-sm px-3 py-2 border rounded-lg mb-2 focus:outline-none focus:ring-1 focus:ring-pink-300">
                             <input type="password" id="new-collab-password" required placeholder="設定密碼 (至少6碼)" class="w-full text-sm px-3 py-2 border rounded-lg mb-3 focus:outline-none focus:ring-1 focus:ring-pink-300">
                             <button type="submit" class="w-full bg-gray-800 text-white py-2 rounded-lg text-sm font-bold hover:bg-gray-900 transition">建立協作者帳號</button>
                         </form>
@@ -220,7 +230,7 @@
         // 1. Firebase 模組載入 (符合單一檔案與安全規則限制)
         // ---------------------------------------------------------
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDoc, doc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         
         // ==========================================
@@ -646,6 +656,9 @@
         // 管理員系統 (登入與後台)
         // ==========================================
         
+        // 將帳號轉為 Firebase 接受的虛擬信箱格式
+        const getFakeEmail = (username) => `${username.trim().toLowerCase()}@photobooth.local`;
+
         // 打開登入視窗
         document.getElementById('btn-go-admin').addEventListener('click', () => {
             // 如果已經是登入狀態且有權限(這裡簡單判定有 Email 就算管理員)
@@ -661,31 +674,72 @@
             document.getElementById('modal-admin-login').classList.add('hidden');
         });
 
-        // 提交登入表單 (移除公開註冊功能)
+        // 提交登入表單 (移除公開註冊功能，加入內建 admin 防呆機制)
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('login-email').value;
+            const username = document.getElementById('login-username').value;
             const pwd = document.getElementById('login-password').value;
+            const email = getFakeEmail(username);
             const errorEl = document.getElementById('login-error');
             errorEl.classList.add('hidden');
 
             try {
                 await signInWithEmailAndPassword(auth, email, pwd);
-                // 成功後會觸發 onAuthStateChanged，但我們可以直接進 Dashboard
                 setupAdminDashboard();
             } catch (err) {
+                // 防呆機制：如果是第一次安裝，且輸入 admin / admin123，自動幫他建立帳號
+                if (username === 'admin' && pwd === 'admin123') {
+                    try {
+                        await createUserWithEmailAndPassword(auth, email, pwd);
+                        setupAdminDashboard();
+                        return;
+                    } catch (createErr) {
+                        console.log("Admin 建立失敗或已存在", createErr);
+                    }
+                }
                 errorEl.innerText = "登入失敗：請檢查帳號密碼，或確認是否已由管理員加入。";
                 errorEl.classList.remove('hidden');
             }
         });
+
+        // 修改密碼表單提交
+        const formChangePassword = document.getElementById('form-change-password');
+        if (formChangePassword) {
+            formChangePassword.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newPwd = document.getElementById('new-password').value;
+                const msgEl = document.getElementById('change-pwd-msg');
+                const btn = e.target.querySelector('button');
+                
+                msgEl.classList.add('hidden');
+                btn.disabled = true;
+                btn.innerText = "更新中...";
+
+                try {
+                    await updatePassword(auth.currentUser, newPwd);
+                    msgEl.innerText = "✅ 密碼更新成功！";
+                    msgEl.className = "text-sm text-center mt-3 text-green-600 font-bold";
+                    e.target.reset();
+                } catch (err) {
+                    console.error("修改密碼失敗:", err);
+                    msgEl.innerText = "❌ 更新失敗，安全驗證過期，請登出後再重新登入修改。";
+                    msgEl.className = "text-sm text-center mt-3 text-red-500 font-bold";
+                } finally {
+                    msgEl.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerText = "更新密碼";
+                }
+            });
+        }
 
         // 新增協作者表單提交
         const formAddCollaborator = document.getElementById('form-add-collaborator');
         if (formAddCollaborator) {
             formAddCollaborator.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const email = document.getElementById('new-collab-email').value;
+                const username = document.getElementById('new-collab-username').value;
                 const pwd = document.getElementById('new-collab-password').value;
+                const email = getFakeEmail(username);
                 const msgEl = document.getElementById('add-collab-msg');
                 const btn = e.target.querySelector('button');
                 
@@ -706,7 +760,7 @@
                     e.target.reset();
                 } catch (err) {
                     console.error("建立協作者失敗:", err);
-                    msgEl.innerText = "❌ 建立失敗，可能信箱已存在或密碼太短(需6碼)。";
+                    msgEl.innerText = "❌ 建立失敗，可能帳號已存在或密碼太短(需6碼)。";
                     msgEl.className = "text-sm text-center mt-3 text-red-500 font-bold";
                 } finally {
                     msgEl.classList.remove('hidden');
