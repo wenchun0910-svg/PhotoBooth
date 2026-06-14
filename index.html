@@ -94,14 +94,17 @@
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
             </div>
-            <div class="flex items-center gap-2 bg-white/60 backdrop-blur px-4 py-1.5 rounded-full shadow-sm text-gray-700 text-sm font-bold border border-white/50">
-                <i class="fa-solid fa-image text-pink-400"></i> 目前邊框：<span id="current-frame-name" class="text-pink-600">載入中...</span>
-            </div>
+            
+            <!-- ⭐ 新增：點擊即可打開邊框選擇選單的按鈕 -->
+            <button id="btn-open-frame-select" class="flex items-center gap-2 bg-white/80 backdrop-blur px-5 py-2 rounded-full shadow-sm text-gray-700 text-sm font-bold border border-white/50 hover:bg-white transition transform hover:scale-105 active:scale-95">
+                <i class="fa-solid fa-image text-pink-500"></i> 目前邊框：<span id="current-frame-name" class="text-pink-600 truncate max-w-[120px]">載入中...</span>
+                <i class="fa-solid fa-list-ul text-gray-400 ml-1"></i>
+            </button>
         </div>
 
         <!-- 管理員入口 -->
         <button id="btn-go-admin" class="absolute top-4 right-4 bg-white/90 backdrop-blur shadow-md px-4 py-2 rounded-full text-gray-700 hover:text-pink-600 transition text-sm font-bold z-50 border border-gray-100">
-            <i class="fa-solid fa-user-shield text-pink-500 mr-1"></i> 管理後台 (邊框設定)
+            <i class="fa-solid fa-user-shield text-pink-500 mr-1"></i> 管理後台
         </button>
     </div>
 
@@ -144,6 +147,19 @@
                 <i class="fa-solid fa-download mr-2"></i> 儲存照片至手機
             </button>
             <a href="?" class="text-gray-400 hover:text-white underline mt-4">我也想拍一張！</a>
+        </div>
+    </div>
+
+    <!-- ⭐ 新增：邊框選擇選單視窗 -->
+    <div id="modal-frame-select" class="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center hidden backdrop-blur-sm p-4 pb-0 sm:pb-4 transition-opacity">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-md shadow-2xl relative max-h-[60vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-border-all text-pink-500 mr-2"></i>選擇邊框</h2>
+                <button id="btn-close-frame-select" class="text-gray-400 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="frame-select-grid" class="grid grid-cols-3 gap-3 overflow-y-auto no-scrollbar pb-6">
+                <!-- 縮圖將由 JS 動態生成 -->
+            </div>
         </div>
     </div>
 
@@ -282,7 +298,7 @@
         // ==========================================
         // 初始化 Firebase
         // ==========================================
-const firebaseConfig = {
+  const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -295,6 +311,7 @@ const firebaseConfig = {
         // 給您的拍貼機取一個專屬的 ID
         appId = 'my-custom-photo-booth';
 
+
         try {
             const app = initializeApp(firebaseConfig);
             auth = getAuth(app);
@@ -306,7 +323,6 @@ const firebaseConfig = {
         // ==========================================
         // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
         // ==========================================
-        // ⚠️ 如果您已經準備好 GAS 網址，請將它貼在下方雙引號內
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
 
         // ==========================================
@@ -334,7 +350,7 @@ const firebaseConfig = {
         `);
 
         // 新增預設邊框 3：可愛海兔 (請換成您自己的 GitHub Raw 或 Imgur 網址)
-        const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/00.png";
+    const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/00.png";
 
         // ==========================================
         // 核心邏輯 - 路由與初始化
@@ -452,7 +468,14 @@ const firebaseConfig = {
             }
 
             await initMediaPipe();
-            await startWebcam();
+            
+            // ⭐ 修復 Bug：重拍回來時，確保渲染迴圈被重新啟動，畫面才不會凍結
+            if (isWebcamRunning) {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = requestAnimationFrame(renderLoop);
+            } else {
+                await startWebcam();
+            }
         }
 
         function loadDefaultFramesIfEmpty() {
@@ -483,7 +506,6 @@ const firebaseConfig = {
         async function initMediaPipe() {
             if (gestureRecognizer) return; 
             try {
-                // 正確的動態載入寫法，徹底解決 404 問題
                 const { GestureRecognizer, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs");
                 const vision = await FilesetResolver.forVisionTasks(
                     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm"
@@ -663,6 +685,9 @@ const firebaseConfig = {
             });
         }
 
+        // ==========================================
+        // UI 事件與按鈕綁定
+        // ==========================================
         document.getElementById('btn-prev-frame').addEventListener('click', () => {
             if (frames.length === 0) return;
             currentFrameIndex = (currentFrameIndex - 1 + frames.length) % frames.length;
@@ -684,6 +709,42 @@ const firebaseConfig = {
             document.getElementById('gesture-hint').classList.remove('hidden');
         });
 
+        // ⭐ 新增：打開邊框選單視窗
+        document.getElementById('btn-open-frame-select').addEventListener('click', () => {
+            const grid = document.getElementById('frame-select-grid');
+            grid.innerHTML = '';
+            
+            frames.forEach((f, idx) => {
+                const div = document.createElement('div');
+                const isSelected = idx === currentFrameIndex;
+                
+                div.className = `cursor-pointer rounded-xl overflow-hidden border-4 checkerboard relative aspect-square transition transform hover:scale-105 ${isSelected ? 'border-pink-500 shadow-md ring-2 ring-pink-200' : 'border-gray-100 hover:border-pink-300'}`;
+                
+                div.innerHTML = `
+                    <img src="${f.url}" class="w-full h-full object-contain absolute inset-0 z-10 drop-shadow-sm" onerror="this.style.display='none'">
+                    ${isSelected ? '<div class="absolute inset-0 bg-pink-500/20 z-20 flex items-center justify-center"><i class="fa-solid fa-check text-white text-3xl drop-shadow-md"></i></div>' : ''}
+                `;
+                
+                div.onclick = () => {
+                    currentFrameIndex = idx;
+                    updateFrameImage();
+                    document.getElementById('modal-frame-select').classList.add('hidden');
+                };
+                
+                grid.appendChild(div);
+            });
+            
+            document.getElementById('modal-frame-select').classList.remove('hidden');
+        });
+
+        // ⭐ 新增：關閉邊框選單視窗
+        document.getElementById('btn-close-frame-select').addEventListener('click', () => {
+            document.getElementById('modal-frame-select').classList.add('hidden');
+        });
+
+        // ==========================================
+        // 後台管理系統邏輯
+        // ==========================================
         const getFakeEmail = (username) => `${username.trim().toLowerCase()}@photobooth.local`;
 
         document.getElementById('btn-go-admin').addEventListener('click', () => {
@@ -743,14 +804,23 @@ const firebaseConfig = {
                     snapshot.forEach(doc => photos.push({ id: doc.id, ...doc.data() }));
                     photos.sort((a, b) => b.timestamp - a.timestamp);
                     renderAdminPhotos(photos);
-                }, (err) => console.error("Admin photos err:", err));
+                }, (err) => {
+                    console.error("Admin photos err:", err);
+                    document.getElementById('admin-photos-grid').innerHTML = `<div class="col-span-full text-center text-red-500 py-10"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i><br>資料庫讀取失敗<br><span class="text-xs text-gray-500 mt-2 block">${err.message}</span></div>`;
+                });
 
                 const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
                 onSnapshot(framesRef, (snapshot) => {
                     let localFrames = [];
                     snapshot.forEach(doc => localFrames.push({ id: doc.id, ...doc.data() }));
                     renderAdminFrames(localFrames);
-                }, (err) => console.error("Admin frames err:", err));
+                }, (err) => {
+                    console.error("Admin frames err:", err);
+                    document.getElementById('admin-frames-list').innerHTML = `<li class="text-center text-red-500 py-4 text-sm"><i class="fa-solid fa-triangle-exclamation"></i> 邊框讀取失敗<br><span class="text-xs mt-1 block">${err.message}</span></li>`;
+                });
+            } else {
+                document.getElementById('admin-photos-grid').innerHTML = '<div class="col-span-full text-center text-gray-400 py-10">未設定 Firebase，目前為離線模式</div>';
+                document.getElementById('admin-frames-list').innerHTML = '<li class="text-center text-gray-400 py-4 text-sm">離線模式無法載入邊框</li>';
             }
         }
 
