@@ -266,7 +266,7 @@
         // ==========================================
         // 初始化 Firebase (必要規則)
         // ==========================================
-       const firebaseConfig = {
+     const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -278,6 +278,11 @@
         auth = getAuth(app);
         db = getFirestore(app);
         appId = typeof __app_id !== 'undefined' ? __app_id : 'default-photo-booth';
+
+        // ==========================================
+        // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
+        // ==========================================
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby19HY-pP3NoPZpWaVO47l4rek_UG0iwdkJPAoTl8TThR_ocbjI4oOSFjwDrad_BHiYtA/exec";
 
         // ==========================================
         // 生成預設邊框 (Base64 SVG，避免跨域污染畫布問題)
@@ -385,13 +390,14 @@
                 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    imgEl.src = data.imageData;
+                    // 兼容新版 Cloud Storage 網址與舊版 Base64
+                    imgEl.src = data.imageUrl || data.imageData;
                     imgEl.classList.remove('hidden');
                     btnDl.classList.remove('hidden');
                     
                     btnDl.onclick = () => {
                         const a = document.createElement('a');
-                        a.href = data.imageData;
+                        a.href = data.imageUrl || data.imageData;
                         a.download = `photo-${Date.now()}.jpg`;
                         a.click();
                     };
@@ -579,9 +585,34 @@
             // 儲存至 Firebase (背景執行)
             if (db && auth && currentUserId) {
                 try {
+                    let finalImageUrl = imageData;
+                    let driveFileId = "";
+
+                    // 1. 若有設定 Google Apps Script，將圖片上傳至 Google 雲端硬碟
+                    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com/")) {
+                        const res = await fetch(GOOGLE_SCRIPT_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 避免 CORS preflight
+                            body: JSON.stringify({
+                                action: 'upload',
+                                filename: `photobooth_${Date.now()}.jpg`,
+                                image: imageData
+                            })
+                        });
+                        const result = await res.json();
+                        if (result.success) {
+                            finalImageUrl = result.url;
+                            driveFileId = result.fileId;
+                        } else {
+                            console.error("Google Drive 上傳失敗:", result.error);
+                        }
+                    }
+
+                    // 2. 將下載網址存入 Firestore 資料庫
                     const photosRef = collection(db, 'artifacts', appId, 'public', 'data', 'photos');
                     const docRef = await addDoc(photosRef, {
-                        imageData: imageData,
+                        imageUrl: finalImageUrl, // Google Drive 網址 或 Base64
+                        driveFileId: driveFileId, // 記錄 Drive ID 以便後續刪除
                         timestamp: Date.now(),
                         userId: currentUserId
                     });
@@ -820,13 +851,14 @@
 
             photos.forEach(photo => {
                 const dateStr = new Date(photo.timestamp).toLocaleString('zh-TW', { hour12: false });
+                const src = photo.imageUrl || photo.imageData; // 兼容新舊格式
                 const div = document.createElement('div');
                 div.className = "relative group rounded-xl overflow-hidden shadow-sm border";
                 div.innerHTML = `
-                    <img src="${photo.imageData}" class="w-full aspect-square object-cover" loading="lazy">
+                    <img src="${src}" class="w-full aspect-square object-cover" loading="lazy">
                     <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2">
                         <span class="text-white text-xs px-2 text-center">${dateStr}</span>
-                        <button class="bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 shadow btn-del-photo" data-id="${photo.id}">
+                        <button class="bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 shadow btn-del-photo" data-id="${photo.id}" data-drive-id="${photo.driveFileId || ''}">
                             <i class="fa-solid fa-trash"></i> 刪除
                         </button>
                     </div>
@@ -838,8 +870,25 @@
             document.querySelectorAll('.btn-del-photo').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     if(!confirm('確定要刪除這張照片嗎？')) return;
-                    const id = e.target.closest('button').dataset.id;
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'photos', id));
+                    const btnEl = e.target.closest('button');
+                    const id = btnEl.dataset.id;
+                    const driveFileId = btnEl.dataset.driveId;
+                    
+                    try {
+                        // 1. 若 Google 雲端硬碟有檔案，先呼叫 GAS 刪除(移至垃圾桶)
+                        if (driveFileId && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com/")) {
+                            await fetch(GOOGLE_SCRIPT_URL, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                body: JSON.stringify({ action: 'delete', fileId: driveFileId })
+                            }).catch(err => console.warn("Drive 檔案刪除失敗", err));
+                        }
+                        // 2. 刪除資料庫紀錄
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'photos', id));
+                    } catch (err) {
+                        console.error("刪除失敗", err);
+                        alert("刪除時發生錯誤");
+                    }
                 });
             });
         }
