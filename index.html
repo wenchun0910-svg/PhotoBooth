@@ -304,11 +304,17 @@
         // ==========================================
         // 初始化 Firebase
         // ==========================================
-        let firebaseConfig = { apiKey: "dummy", projectId: "dummy", appId: "dummy" };
-        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-            try { firebaseConfig = JSON.parse(__firebase_config); } catch(e){}
-        }
-        appId = typeof __app_id !== 'undefined' ? __app_id : 'default-photo-booth';
+      const firebaseConfig = {
+  apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
+  authDomain: "photobooth-92401.firebaseapp.com",
+  projectId: "photobooth-92401",
+  storageBucket: "photobooth-92401.firebasestorage.app",
+  messagingSenderId: "948611804541",
+  appId: "1:948611804541:web:7503665164cc4ac6907014"
+};
+        // 給您的拍貼機取一個專屬的 ID
+        appId = 'my-custom-photo-booth';
+
 
         try {
             const app = initializeApp(firebaseConfig);
@@ -321,7 +327,9 @@
         // ==========================================
         // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
         // ==========================================
-        const GOOGLE_SCRIPT_URL = "請填入您的_Google_Apps_Script_網址";
+      const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
+
+
 
         // ==========================================
         // 生成預設邊框
@@ -348,7 +356,7 @@
         `);
 
         // 新增預設邊框 3：可愛海兔 (請換成您自己的 GitHub Raw 或 Imgur 網址)
-        const defaultFrame3 = "https://raw.githubusercontent.com/您的帳號/專案名稱/main/可愛海兔去背版.png";
+       const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/00.png";
 
         // ==========================================
         // 核心邏輯 - 路由與初始化
