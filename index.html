@@ -43,17 +43,20 @@
         }, 3000);
     </script>
 </head>
-<body class="bg-pink-50 min-h-screen text-gray-800 flex flex-col overflow-hidden">
+<body class="min-h-screen text-gray-800 flex flex-col overflow-hidden" style="background-image: url('img-0323-011.jpg'); background-size: cover; background-position: center; background-attachment: fixed;">
 
     <!-- 全局載入畫面 -->
-    <div id="global-loading" class="flex-1 flex flex-col items-center justify-center absolute inset-0 z-50 bg-pink-50">
-        <i class="fa-solid fa-spinner fa-spin text-5xl text-pink-500 mb-4"></i>
-        <p class="text-gray-600 font-bold tracking-widest text-lg">系統啟動中...</p>
+    <div id="global-loading" class="flex-1 flex flex-col items-center justify-center absolute inset-0 z-50 bg-white/80 backdrop-blur-sm">
+        <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Loading Logo" class="w-24 h-auto mb-4 animate-bounce drop-shadow-lg rounded-full">
+        <p class="text-gray-800 font-bold tracking-widest text-lg">系統啟動中...</p>
     </div>
 
     <!-- 主視圖：拍貼機畫面 -->
     <div id="view-booth" class="flex-1 flex flex-col items-center justify-center p-4 relative hidden">
-        <h1 class="text-3xl md:text-4xl font-bold text-pink-500 mb-4 tracking-wider"><i class="fa-solid fa-camera-retro"></i> 智能拍貼機</h1>
+        <div class="flex items-center justify-center mb-4">
+            <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Logo" class="w-10 h-10 md:w-12 md:h-12 mr-3 object-contain drop-shadow-md rounded-full bg-white/50 border border-white">
+            <h1 class="text-3xl md:text-4xl font-bold text-pink-600 tracking-wider drop-shadow-md" style="text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">智能拍貼機</h1>
+        </div>
         
         <!-- 相機與畫布容器 -->
         <div class="relative w-full max-w-md aspect-square bg-gray-900 rounded-3xl shadow-2xl overflow-hidden ring-4 ring-white">
@@ -187,10 +190,13 @@
     </div>
 
     <!-- 管理員控制台 -->
-    <div id="view-admin-dashboard" class="flex-1 flex flex-col bg-gray-50 hidden h-screen overflow-hidden">
+    <div id="view-admin-dashboard" class="flex-1 flex flex-col bg-white/90 backdrop-blur-md hidden h-screen overflow-hidden">
         <!-- 頂部導航 -->
-        <header class="bg-white shadow-sm px-6 py-4 flex justify-between items-center z-10">
-            <h1 class="text-2xl font-bold text-gray-800"><i class="fa-solid fa-user-shield text-pink-500 mr-2"></i> 後台管理</h1>
+        <header class="bg-white/80 shadow-sm px-6 py-4 flex justify-between items-center z-10 border-b border-gray-200">
+            <h1 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
+                <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Logo" class="w-8 h-8 mr-2 rounded-full object-contain bg-white/50 border border-gray-100">
+                後台管理
+            </h1>
             <div class="flex gap-4 items-center">
                 <button id="btn-admin-home" class="text-gray-600 hover:text-pink-500 px-3 py-1"><i class="fa-solid fa-house"></i> 回首頁</button>
                 <button id="btn-logout" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-300">登出</button>
@@ -298,7 +304,7 @@
         // ==========================================
         // 初始化 Firebase
         // ==========================================
-  const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -306,8 +312,6 @@
   messagingSenderId: "948611804541",
   appId: "1:948611804541:web:7503665164cc4ac6907014"
 };
-
-        
         // 給您的拍貼機取一個專屬的 ID
         appId = 'my-custom-photo-booth';
 
@@ -323,7 +327,7 @@
         // ==========================================
         // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
         // ==========================================
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
+       const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
 
         // ==========================================
         // 生成預設邊框
@@ -350,7 +354,7 @@
         `);
 
         // 新增預設邊框 3：可愛海兔 (請換成您自己的 GitHub Raw 或 Imgur 網址)
-    const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/00.png";
+      const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/00.png";
 
         // ==========================================
         // 核心邏輯 - 路由與初始化
