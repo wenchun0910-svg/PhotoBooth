@@ -204,7 +204,7 @@
             <h1 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
                 <!-- ⭐ 放大後台的 Logo，加入位移校正置中 -->
                 <div class="w-10 h-10 md:w-12 md:h-12 mr-3 rounded-full overflow-hidden border border-gray-200 shadow-sm bg-white flex items-center justify-center shrink-0">
-                    <img src="logo1.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+                    <img src="logo1.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.6] -translate-x-[8%] -translate-y-[4%]">
                 </div>
                 後台管理
             </h1>
@@ -315,7 +315,7 @@
         // ==========================================
         // 初始化 Firebase
         // ==========================================
-         const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -338,7 +338,7 @@
         // ==========================================
         // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
         // ==========================================
-       const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
+   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
 
         // ==========================================
         // 生成預設邊框
@@ -365,7 +365,7 @@
         `);
 
         // 新增預設邊框 3：可愛海兔 (請換成您自己的 GitHub Raw 或 Imgur 網址)
-        const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/00.png";
+         const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/00.png";
 
         // ==========================================
         // 核心邏輯 - 路由與初始化
@@ -507,7 +507,12 @@
 
         function updateFrameImage() {
             if (frames.length > 0) {
-                currentFrameImage.crossOrigin = "anonymous"; 
+                // Base64 格式不需要 crossOrigin，避免部分瀏覽器報錯
+                if (!frames[currentFrameIndex].url.startsWith('data:')) {
+                    currentFrameImage.crossOrigin = "anonymous"; 
+                } else {
+                    currentFrameImage.removeAttribute('crossOrigin');
+                }
                 currentFrameImage.src = frames[currentFrameIndex].url;
                 const nameEl = document.getElementById('current-frame-name');
                 if(nameEl) nameEl.innerText = frames[currentFrameIndex].name || `自訂邊框 ${currentFrameIndex + 1}`;
@@ -735,12 +740,28 @@
                 
                 div.className = `cursor-pointer rounded-xl overflow-hidden border-4 checkerboard relative aspect-square transition transform hover:scale-105 ${isSelected ? 'border-pink-500 shadow-md ring-2 ring-pink-200' : 'border-gray-100 hover:border-pink-300'}`;
                 
+                // 改為安全綁定模式，並加入無效提示
                 div.innerHTML = `
-                    <img src="${f.url}" class="w-full h-full object-contain absolute inset-0 z-10 drop-shadow-sm" onerror="this.style.display='none'">
-                    ${isSelected ? '<div class="absolute inset-0 bg-pink-500/20 z-20 flex items-center justify-center"><i class="fa-solid fa-check text-white text-3xl drop-shadow-md"></i></div>' : ''}
+                    <img class="popup-frame-img w-full h-full object-contain absolute inset-0 z-10 drop-shadow-sm">
+                    <div class="error-overlay hidden absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center text-red-500 text-xs font-bold"><i class="fa-solid fa-triangle-exclamation mb-1 text-lg"></i>圖片失效</div>
+                    ${isSelected ? '<div class="absolute inset-0 bg-pink-500/20 z-30 flex items-center justify-center"><i class="fa-solid fa-check text-white text-3xl drop-shadow-md"></i></div>' : ''}
                 `;
                 
+                const imgEl = div.querySelector('.popup-frame-img');
+                const errOverlay = div.querySelector('.error-overlay');
+                
+                if (!f.url.startsWith('data:')) {
+                    imgEl.crossOrigin = "anonymous";
+                }
+                imgEl.referrerPolicy = "no-referrer";
+                imgEl.onerror = () => { 
+                    imgEl.style.display = 'none'; 
+                    errOverlay.classList.remove('hidden');
+                };
+                imgEl.src = f.url; // 安全載入
+                
                 div.onclick = () => {
+                    if (!errOverlay.classList.contains('hidden')) return; // 無效圖片不給選
                     currentFrameIndex = idx;
                     updateFrameImage();
                     document.getElementById('modal-frame-select').classList.add('hidden');
@@ -853,8 +874,9 @@
                 const src = photo.imageUrl || photo.imageData; 
                 const div = document.createElement('div');
                 div.className = "relative group rounded-xl overflow-hidden shadow-sm border";
+                // 改為安全綁定模式
                 div.innerHTML = `
-                    <img src="${src}" class="w-full aspect-square object-cover" loading="lazy">
+                    <img class="admin-photo-img w-full aspect-square object-cover" loading="lazy">
                     <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2">
                         <span class="text-white text-xs px-2 text-center">${dateStr}</span>
                         <button class="bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 shadow btn-del-photo" data-id="${photo.id}" data-drive-id="${photo.driveFileId || ''}">
@@ -862,6 +884,11 @@
                         </button>
                     </div>
                 `;
+                
+                const imgEl = div.querySelector('.admin-photo-img');
+                imgEl.referrerPolicy = "no-referrer";
+                imgEl.src = src; // 安全載入
+                
                 grid.appendChild(div);
             });
 
@@ -901,18 +928,34 @@
             localFrames.forEach(frame => {
                 const li = document.createElement('li');
                 li.className = "flex items-center gap-3 p-2 bg-gray-50 rounded-lg border";
+                // 加入明確的錯誤標示
                 li.innerHTML = `
                     <div class="w-16 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0 relative checkerboard flex items-center justify-center">
                         <i class="fa-solid fa-image-slash text-gray-400 absolute z-0 text-xl"></i>
-                        <img src="${frame.url}" class="w-full h-full object-contain absolute inset-0 z-10 bg-transparent" onerror="this.style.display='none'">
+                        <img class="admin-frame-img w-full h-full object-contain absolute inset-0 z-10 bg-transparent">
                     </div>
                     <div class="flex-1 truncate text-sm font-semibold text-gray-700">
                         ${frame.name || '未命名邊框'}
+                        <span class="error-badge hidden text-xs text-red-500 ml-2 bg-red-50 px-2 py-0.5 rounded border border-red-100">圖片失效</span>
                     </div>
                     <button class="text-red-400 hover:text-red-600 p-2 btn-del-frame" data-id="${frame.id}">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 `;
+                
+                const imgEl = li.querySelector('.admin-frame-img');
+                const errBadge = li.querySelector('.error-badge');
+                
+                if (frame.url && !frame.url.startsWith('data:')) {
+                    imgEl.crossOrigin = "anonymous";
+                }
+                imgEl.referrerPolicy = "no-referrer";
+                imgEl.onerror = () => { 
+                    imgEl.style.display = 'none'; 
+                    errBadge.classList.remove('hidden');
+                };
+                imgEl.src = frame.url || ''; 
+                
                 list.appendChild(li);
             });
 
@@ -931,7 +974,8 @@
             const submitBtn = e.target.querySelector('button');
             
             const name = nameInput.value.trim();
-            const url = urlInput.value.trim();
+            // 過濾掉使用者可能誤貼的引號
+            const url = urlInput.value.trim().replace(/^['"]+/, '').replace(/['"]+$/, '');
             
             if(!url) return;
 
