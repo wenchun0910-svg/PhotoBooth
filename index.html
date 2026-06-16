@@ -43,12 +43,12 @@
         }, 3000);
     </script>
 </head>
-<body class="min-h-screen text-gray-800 flex flex-col overflow-x-hidden" style="background-image: url('bk.jpg'); background-size: cover; background-position: center; background-attachment: fixed;">
+<body class="min-h-screen text-gray-800 flex flex-col overflow-x-hidden" style="background-image: url('img-0323-011.jpg'); background-size: cover; background-position: center; background-attachment: fixed;">
 
     <!-- 全局載入畫面 -->
     <div id="global-loading" class="flex-1 flex flex-col items-center justify-center absolute inset-0 z-50 bg-white/80 backdrop-blur-sm">
         <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mb-4 animate-bounce bg-white flex items-center justify-center">
-            <img src=logo1.png" alt="Loading Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+            <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Loading Logo" class="w-full h-full object-cover transform scale-[1.5] -translate-x-[8%] -translate-y-[4%]">
         </div>
         <p class="text-gray-800 font-bold tracking-widest text-lg">系統啟動中...</p>
     </div>
@@ -57,7 +57,7 @@
     <div id="view-booth" class="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 relative hidden w-full overflow-y-auto no-scrollbar">
         <div class="flex items-center justify-center mb-2 md:mb-4">
             <div class="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 mr-3 rounded-full overflow-hidden border-2 border-white shadow-md bg-white flex items-center justify-center shrink-0">
-                <img src="logo1.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+                <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.6] -translate-x-[8%] -translate-y-[4%]">
             </div>
             <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-pink-600 tracking-wider drop-shadow-md" style="text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">智能拍貼機</h1>
         </div>
@@ -206,11 +206,11 @@
             <form id="form-login" class="flex flex-col gap-4">
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">帳號</label>
-                    <input type="text" id="login-username" placeholder="" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
+                    <input type="text" id="login-username" placeholder="預設: admin" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">密碼</label>
-                    <input type="password" id="login-password" placeholder="" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
+                    <input type="password" id="login-password" placeholder="預設: admin123" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
                 </div>
                 <button type="submit" id="btn-submit-login" class="w-full bg-gray-800 text-white py-3 rounded-xl font-bold hover:bg-gray-900 transition mt-2">
                     登入
@@ -226,7 +226,7 @@
         <header class="bg-white/80 shadow-sm px-6 py-4 flex justify-between items-center z-10 border-b border-gray-200">
             <h1 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
                 <div class="w-10 h-10 md:w-12 md:h-12 mr-3 rounded-full overflow-hidden border border-gray-200 shadow-sm bg-white flex items-center justify-center shrink-0">
-                    <img src="logo1.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+                    <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.6] -translate-x-[8%] -translate-y-[4%]">
                 </div>
                 後台管理
             </h1>
@@ -338,7 +338,7 @@
         // ==========================================
         // 初始化 Firebase (若有填入真實的 config 則會連線)
         // ==========================================
-         const firebaseConfig = {
+     const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -348,6 +348,7 @@
 };
         // 給您的拍貼機取一個專屬的 ID
         appId = 'my-custom-photo-booth';
+
 
         try {
             const app = initializeApp(firebaseConfig);
@@ -386,12 +387,12 @@
             </svg>
         `);
 
-        const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/03.png";
+         const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/03.png";
 
         const DEFAULT_FRAMES = [
             { id: 'def1', url: defaultFrame1, name: 'Love Moment', isDefault: true },
             { id: 'def2', url: defaultFrame2, name: 'Film Strip', isDefault: true },
-            { id: 'def3', url: defaultFrame3, name: '可愛猴子', isDefault: true }
+            { id: 'def3', url: defaultFrame3, name: '可愛海兔', isDefault: true }
         ];
 
         // ==========================================
@@ -1125,6 +1126,80 @@
             };
 
             testImg.src = url;
+        });
+
+        // ==========================================
+        // 批次刪除邏輯
+        // ==========================================
+        function updateBatchDeleteUI() {
+            const btnBatchDelete = document.getElementById('btn-batch-delete');
+            const countSpan = document.getElementById('batch-delete-count');
+            if (!btnBatchDelete || !countSpan) return;
+
+            if (selectedPhotos.size > 0) {
+                btnBatchDelete.classList.remove('hidden');
+                countSpan.innerText = selectedPhotos.size;
+            } else {
+                btnBatchDelete.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('btn-select-all')?.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.photo-checkbox');
+            const allCheckedOnPage = Array.from(checkboxes).every(cb => cb.checked);
+            
+            checkboxes.forEach(cb => {
+                const photoId = cb.dataset.id;
+                if (allCheckedOnPage) {
+                    // 全面取消勾選
+                    cb.checked = false;
+                    selectedPhotos.delete(photoId);
+                    cb.closest('div.group').classList.remove('ring-4', 'ring-pink-500', 'scale-[0.98]');
+                } else {
+                    // 全面勾選
+                    cb.checked = true;
+                    selectedPhotos.add(photoId);
+                    cb.closest('div.group').classList.add('ring-4', 'ring-pink-500', 'scale-[0.98]');
+                }
+            });
+            updateBatchDeleteUI();
+        });
+
+        document.getElementById('btn-batch-delete')?.addEventListener('click', async () => {
+            if (selectedPhotos.size === 0) return;
+            if (!confirm(`確定要刪除選取的 ${selectedPhotos.size} 張照片嗎？\n(此操作無法復原！)`)) return;
+            
+            const btn = document.getElementById('btn-batch-delete');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>刪除中...';
+
+            try {
+                const photosToDelete = allAdminPhotos.filter(p => selectedPhotos.has(p.id));
+                
+                // ⭐ 使用 Promise.all 併發刪除，提升處理速度
+                const deletePromises = photosToDelete.map(async (photo) => {
+                    if (photo.driveFileId && typeof GOOGLE_SCRIPT_URL !== 'undefined' && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com/")) {
+                        fetch(GOOGLE_SCRIPT_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({ action: 'delete', fileId: photo.driveFileId })
+                        }).catch(err => console.warn("Drive 檔案刪除失敗", err));
+                    }
+                    return deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'photos', photo.id));
+                });
+
+                await Promise.all(deletePromises);
+                
+                selectedPhotos.clear();
+                updateBatchDeleteUI();
+                
+            } catch (err) {
+                console.error("批次刪除失敗", err);
+                alert("批次刪除時發生錯誤");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-trash mr-1"></i>刪除 (<span id="batch-delete-count">${selectedPhotos.size}</span>)`;
+            }
         });
 
         // ==========================================
