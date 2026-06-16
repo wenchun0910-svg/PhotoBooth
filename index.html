@@ -44,13 +44,13 @@
     </script>
 </head>
 <!-- ⭐ 修改1：將 overflow-hidden 改為 overflow-x-hidden，允許畫面垂直捲動 -->
-<body class="min-h-screen text-gray-800 flex flex-col overflow-x-hidden" style="background-image: url('bk.jpg'); background-size: cover; background-position: center; background-attachment: fixed;">
+<body class="min-h-screen text-gray-800 flex flex-col overflow-x-hidden" style="background-image: url('img-0323-011.jpg'); background-size: cover; background-position: center; background-attachment: fixed;">
 
     <!-- 全局載入畫面 -->
     <div id="global-loading" class="flex-1 flex flex-col items-center justify-center absolute inset-0 z-50 bg-white/80 backdrop-blur-sm">
         <!-- ⭐ 放大載入畫面的 Logo，加入位移校正置中 -->
         <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mb-4 animate-bounce bg-white flex items-center justify-center">
-            <img src="logo1.png" alt="Loading Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+            <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Loading Logo" class="w-full h-full object-cover transform scale-[1.5] -translate-x-[8%] -translate-y-[4%]">
         </div>
         <p class="text-gray-800 font-bold tracking-widest text-lg">系統啟動中...</p>
     </div>
@@ -61,7 +61,7 @@
         <div class="flex items-center justify-center mb-2 md:mb-4">
             <!-- ⭐ 修改3：稍微縮小 Logo 與標題高度，節省垂直空間 -->
             <div class="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 mr-3 rounded-full overflow-hidden border-2 border-white shadow-md bg-white flex items-center justify-center shrink-0">
-                <img src="logo1.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+                <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.6] -translate-x-[8%] -translate-y-[4%]">
             </div>
             <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-pink-600 tracking-wider drop-shadow-md" style="text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">智能拍貼機</h1>
         </div>
@@ -204,7 +204,7 @@
             <h1 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
                 <!-- ⭐ 放大後台的 Logo，加入位移校正置中 -->
                 <div class="w-10 h-10 md:w-12 md:h-12 mr-3 rounded-full overflow-hidden border border-gray-200 shadow-sm bg-white flex items-center justify-center shrink-0">
-                    <img src="logo1.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+                    <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.6] -translate-x-[8%] -translate-y-[4%]">
                 </div>
                 後台管理
             </h1>
@@ -315,7 +315,7 @@
         // ==========================================
         // 初始化 Firebase
         // ==========================================
-         const firebaseConfig = {
+          const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -338,7 +338,7 @@
         // ==========================================
         // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
         // ==========================================
-      const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
+     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
 
         // ==========================================
         // 生成預設邊框
@@ -364,14 +364,14 @@
             </svg>
         `);
 
-        // 新增預設邊框：可愛海兔 (請換成您自己的 GitHub Raw 或 Imgur 網址)
-         const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/03.png";
+        // 新增預設邊框 3：可愛猴子 (請換成您自己的 GitHub Raw 或 Imgur 網址)
+     const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/03.png";
 
         // ⭐ 新增常數：整合所有預設邊框，讓系統與後台能統一讀取
         const DEFAULT_FRAMES = [
             { id: 'def1', url: defaultFrame1, name: 'Love Moment', isDefault: true },
             { id: 'def2', url: defaultFrame2, name: 'Film Strip', isDefault: true },
-            { id: 'def3', url: defaultFrame3, name: '可愛猴子', isDefault: true }
+            { id: 'def3', url: defaultFrame3, name: '可愛海兔', isDefault: true }
         ];
 
         // ==========================================
@@ -1037,14 +1037,23 @@
                 btn.innerText = "更新中...";
 
                 try {
+                    // ⭐ 防呆機制：確認目前帳號是否允許修改密碼
+                    if (!auth.currentUser || auth.currentUser.isAnonymous) {
+                        throw new Error("目前為訪客身分或測試模式，無法修改密碼。");
+                    }
                     await updatePassword(auth.currentUser, newPwd);
                     msgEl.innerText = "✅ 密碼更新成功！";
                     msgEl.className = "text-sm text-center mt-3 text-green-600 font-bold";
                     e.target.reset();
                 } catch (err) {
                     console.error("修改密碼失敗:", err);
-                    msgEl.innerText = "❌ 更新失敗，安全驗證過期，請登出後再重新登入修改。";
-                    msgEl.className = "text-sm text-center mt-3 text-red-500 font-bold";
+                    if (err.code === 'auth/requires-recent-login') {
+                        msgEl.innerText = "❌ 安全驗證過期，請登出後再重新登入修改。";
+                    } else {
+                        // 將詳細錯誤印在畫面上
+                        msgEl.innerText = "❌ 更新失敗：" + (err.message || err.toString());
+                    }
+                    msgEl.className = "text-sm text-center mt-3 text-red-500 font-bold break-words";
                 } finally {
                     msgEl.classList.remove('hidden');
                     btn.disabled = false;
@@ -1068,7 +1077,9 @@
                 btn.innerText = "建立中...";
 
                 try {
-                    const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+                    // ⭐ 修正 Bug：給予動態的 App 名稱，避免重複點擊時拋出衝突錯誤
+                    const appName = "SecondaryApp_" + Date.now();
+                    const secondaryApp = initializeApp(firebaseConfig, appName);
                     const secondaryAuth = getAuth(secondaryApp);
                     
                     await createUserWithEmailAndPassword(secondaryAuth, email, pwd);
@@ -1079,8 +1090,9 @@
                     e.target.reset();
                 } catch (err) {
                     console.error("建立協作者失敗:", err);
-                    msgEl.innerText = "❌ 建立失敗，可能帳號已存在或密碼太短(需6碼)。";
-                    msgEl.className = "text-sm text-center mt-3 text-red-500 font-bold";
+                    // 將詳細錯誤印在畫面上
+                    msgEl.innerText = "❌ 建立失敗：" + (err.message || err.toString());
+                    msgEl.className = "text-sm text-center mt-3 text-red-500 font-bold break-words";
                 } finally {
                     msgEl.classList.remove('hidden');
                     btn.disabled = false;
