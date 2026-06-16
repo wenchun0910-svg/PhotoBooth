@@ -243,7 +243,13 @@
                 
                 <!-- 照片管理區 -->
                 <div class="lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col h-fit">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">雲端照片庫</h2>
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-xl font-bold text-gray-800">雲端照片庫</h2>
+                        <div class="flex gap-2">
+                            <button id="btn-select-all" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded font-bold transition">本頁全選</button>
+                            <button id="btn-batch-delete" class="text-sm bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1 rounded font-bold transition hidden shadow-sm"><i class="fa-solid fa-trash mr-1"></i>刪除 (<span id="batch-delete-count">0</span>)</button>
+                        </div>
+                    </div>
                     <!-- ⭐ 修改：移除高度限制與捲軸，讓 6 張照片自然完整呈現 (2 排) -->
                     <div id="admin-photos-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3 content-start p-1 mb-2 w-full h-auto">
                         <!-- 照片動態生成 -->
@@ -314,6 +320,7 @@
         let allAdminPhotos = []; 
         let currentPhotoPage = 1; 
         const PHOTOS_PER_PAGE = 6; 
+        let selectedPhotos = new Set(); // ⭐ 紀錄批次刪除選取的照片 ID
 
         // 拍貼機狀態
         const video = document.getElementById('webcam');
@@ -361,7 +368,7 @@
         // ==========================================
         // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
         // ==========================================
-     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
 
         // ==========================================
         // 生成預設邊框
@@ -922,12 +929,18 @@
                 const dateStr = new Date(photo.timestamp).toLocaleString('zh-TW', { hour12: false });
                 const src = photo.imageUrl || photo.imageData; 
                 const div = document.createElement('div');
-                div.className = "relative group rounded-xl overflow-hidden shadow-sm border h-fit";
+                
+                const isSelected = selectedPhotos.has(photo.id);
+                div.className = `relative group rounded-xl overflow-hidden shadow-sm border h-fit transition-all duration-200 ${isSelected ? 'ring-4 ring-pink-500 scale-[0.98]' : ''}`;
+                
                 div.innerHTML = `
                     <img class="admin-photo-img w-full aspect-square object-cover" loading="lazy">
-                    <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2">
+                    <div class="absolute top-3 left-3 z-20">
+                        <input type="checkbox" class="photo-checkbox w-6 h-6 accent-pink-500 rounded cursor-pointer drop-shadow-md border-2 border-white shadow-sm" data-id="${photo.id}" ${isSelected ? 'checked' : ''}>
+                    </div>
+                    <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 pointer-events-none">
                         <span class="text-white text-xs px-2 text-center">${dateStr}</span>
-                        <button class="bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 shadow btn-del-photo" data-id="${photo.id}" data-drive-id="${photo.driveFileId || ''}">
+                        <button class="bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 shadow btn-del-photo pointer-events-auto" data-id="${photo.id}" data-drive-id="${photo.driveFileId || ''}">
                             <i class="fa-solid fa-trash"></i> 刪除
                         </button>
                     </div>
@@ -936,6 +949,18 @@
                 const imgEl = div.querySelector('.admin-photo-img');
                 imgEl.referrerPolicy = "no-referrer";
                 imgEl.src = src; 
+
+                const checkbox = div.querySelector('.photo-checkbox');
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        selectedPhotos.add(photo.id);
+                        div.classList.add('ring-4', 'ring-pink-500', 'scale-[0.98]');
+                    } else {
+                        selectedPhotos.delete(photo.id);
+                        div.classList.remove('ring-4', 'ring-pink-500', 'scale-[0.98]');
+                    }
+                    updateBatchDeleteUI();
+                });
                 
                 grid.appendChild(div);
             });
@@ -948,7 +973,7 @@
                     const driveFileId = btnEl.dataset.driveId;
                     
                     try {
-                        if (driveFileId && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com/")) {
+                        if (driveFileId && typeof GOOGLE_SCRIPT_URL !== 'undefined' && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com/")) {
                             await fetch(GOOGLE_SCRIPT_URL, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -956,6 +981,10 @@
                             }).catch(err => console.warn("Drive 檔案刪除失敗", err));
                         }
                         await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'photos', id));
+                        
+                        selectedPhotos.delete(id);
+                        updateBatchDeleteUI();
+                        
                     } catch (err) {
                         console.error("刪除失敗", err);
                         alert("刪除時發生錯誤");
@@ -1151,12 +1180,10 @@
             checkboxes.forEach(cb => {
                 const photoId = cb.dataset.id;
                 if (allCheckedOnPage) {
-                    // 全面取消勾選
                     cb.checked = false;
                     selectedPhotos.delete(photoId);
                     cb.closest('div.group').classList.remove('ring-4', 'ring-pink-500', 'scale-[0.98]');
                 } else {
-                    // 全面勾選
                     cb.checked = true;
                     selectedPhotos.add(photoId);
                     cb.closest('div.group').classList.add('ring-4', 'ring-pink-500', 'scale-[0.98]');
@@ -1176,7 +1203,6 @@
             try {
                 const photosToDelete = allAdminPhotos.filter(p => selectedPhotos.has(p.id));
                 
-                // ⭐ 使用 Promise.all 併發刪除，提升處理速度
                 const deletePromises = photosToDelete.map(async (photo) => {
                     if (photo.driveFileId && typeof GOOGLE_SCRIPT_URL !== 'undefined' && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com/")) {
                         fetch(GOOGLE_SCRIPT_URL, {
