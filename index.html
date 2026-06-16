@@ -43,12 +43,10 @@
         }, 3000);
     </script>
 </head>
-<!-- ⭐ 修改1：將 overflow-hidden 改為 overflow-x-hidden，允許畫面垂直捲動 -->
 <body class="min-h-screen text-gray-800 flex flex-col overflow-x-hidden" style="background-image: url('img-0323-011.jpg'); background-size: cover; background-position: center; background-attachment: fixed;">
 
     <!-- 全局載入畫面 -->
     <div id="global-loading" class="flex-1 flex flex-col items-center justify-center absolute inset-0 z-50 bg-white/80 backdrop-blur-sm">
-        <!-- ⭐ 放大載入畫面的 Logo，加入位移校正置中 -->
         <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mb-4 animate-bounce bg-white flex items-center justify-center">
             <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Loading Logo" class="w-full h-full object-cover transform scale-[1.5] -translate-x-[8%] -translate-y-[4%]">
         </div>
@@ -56,35 +54,28 @@
     </div>
 
     <!-- 主視圖：拍貼機畫面 -->
-    <!-- ⭐ 修改2：加入 w-full overflow-y-auto no-scrollbar，讓這個區塊也能捲動防呆 -->
     <div id="view-booth" class="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 relative hidden w-full overflow-y-auto no-scrollbar">
         <div class="flex items-center justify-center mb-2 md:mb-4">
-            <!-- ⭐ 修改3：稍微縮小 Logo 與標題高度，節省垂直空間 -->
             <div class="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 mr-3 rounded-full overflow-hidden border-2 border-white shadow-md bg-white flex items-center justify-center shrink-0">
                 <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.6] -translate-x-[8%] -translate-y-[4%]">
             </div>
             <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-pink-600 tracking-wider drop-shadow-md" style="text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">智能拍貼機</h1>
         </div>
         
-        <!-- 相機與畫布容器 (⭐ 放大畫布尺寸設定) -->
+        <!-- 相機與畫布容器 -->
         <div class="relative w-full max-w-[95vw] sm:max-w-[500px] md:max-w-[60vh] lg:max-w-[70vh] xl:max-w-[75vh] aspect-square bg-gray-900 rounded-3xl shadow-2xl overflow-hidden ring-4 ring-white shrink-0">
             <video id="webcam" autoplay playsinline class="hidden"></video>
-            <!-- 移除 CSS 鏡像，改用 Canvas 繪製時處理，避免邊框文字顛倒 -->
             <canvas id="output_canvas" class="w-full h-full object-cover"></canvas>
             
-            <!-- 閃光燈 -->
             <div id="flash-overlay" class="absolute inset-0 bg-white opacity-0 z-50"></div>
             
-            <!-- 倒數計時文字 -->
             <div id="countdown-text" class="absolute inset-0 flex items-center justify-center text-white text-9xl font-bold drop-shadow-lg opacity-0 z-40" style="text-shadow: 0 4px 10px rgba(0,0,0,0.5);"></div>
             
-            <!-- 載入中狀態 -->
             <div id="loading-state" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 text-white z-30">
                 <i class="fa-solid fa-spinner fa-spin text-4xl mb-3"></i>
                 <p id="loading-text" class="text-sm">正在初始化相機與 AI...</p>
             </div>
 
-            <!-- 手勢提示 -->
             <div id="gesture-hint" class="absolute top-4 left-0 right-0 text-center z-20 pointer-events-none hidden">
                 <span class="bg-black bg-opacity-50 text-white px-4 md:px-6 py-2 md:py-3 rounded-full text-sm md:text-base backdrop-blur-sm">
                     <i class="fa-solid fa-hand text-yellow-300"></i> 對鏡頭比 🖐 開始自拍
@@ -92,7 +83,7 @@
             </div>
         </div>
 
-        <!-- 控制按鈕 (⭐ 同步放大按鈕容器寬度，並稍微放大按鈕本身) -->
+        <!-- 控制按鈕 -->
         <div class="mt-4 md:mt-6 flex flex-col items-center z-10 w-full max-w-[95vw] sm:max-w-[500px] md:max-w-[60vh] lg:max-w-[70vh] xl:max-w-[75vh] shrink-0 mb-4">
             <div class="flex items-center justify-between w-full px-4 md:px-8 mb-3 md:mb-5">
                 <button id="btn-prev-frame" class="w-12 h-12 md:w-16 md:h-16 lg:w-18 lg:h-18 bg-white rounded-full shadow-lg text-pink-500 hover:bg-pink-50 transition flex items-center justify-center text-xl md:text-2xl transform hover:-translate-x-1">
@@ -106,14 +97,12 @@
                 </button>
             </div>
             
-            <!-- ⭐ 點擊即可打開邊框選擇選單的按鈕 -->
             <button id="btn-open-frame-select" class="flex items-center gap-2 bg-white/80 backdrop-blur px-5 md:px-6 py-2 md:py-3 rounded-full shadow-sm text-gray-700 text-sm md:text-lg font-bold border border-white/50 hover:bg-white transition transform hover:scale-105 active:scale-95">
                 <i class="fa-solid fa-image text-pink-500"></i> 目前邊框：<span id="current-frame-name" class="text-pink-600 truncate max-w-[120px] md:max-w-[250px]">載入中...</span>
                 <i class="fa-solid fa-list-ul text-gray-400 ml-1"></i>
             </button>
         </div>
 
-        <!-- 管理員入口 -->
         <button id="btn-go-admin" class="absolute top-4 right-4 bg-white/90 backdrop-blur shadow-md px-4 py-2 rounded-full text-gray-700 hover:text-pink-600 transition text-sm font-bold z-50 border border-gray-100">
             <i class="fa-solid fa-user-shield text-pink-500 mr-1"></i> 管理後台
         </button>
@@ -122,12 +111,10 @@
     <!-- 拍攝結果與下載視圖 -->
     <div id="view-result" class="flex-1 flex flex-col items-center justify-center p-4 relative hidden">
         <div class="glass-panel p-6 md:p-10 lg:p-12 rounded-3xl shadow-2xl max-w-2xl lg:max-w-4xl xl:max-w-5xl w-full flex flex-col md:flex-row gap-8 items-center">
-            <!-- 照片預覽 -->
             <div class="w-full md:w-1/2 flex flex-col items-center">
                 <img id="result-image" class="w-full aspect-square object-cover rounded-xl shadow-md border-4 border-white" src="" alt="拍攝結果">
             </div>
             
-            <!-- QR Code 與資訊 -->
             <div class="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">拍攝完成！✨</h2>
                 <p class="text-gray-600 md:text-lg mb-6">掃描下方 QRCode 或點擊按鈕儲存這份美好回憶。</p>
@@ -148,7 +135,7 @@
         </div>
     </div>
 
-    <!-- 單純瀏覽照片視圖 (從 QR Code 掃描進來) -->
+    <!-- 單純瀏覽照片視圖 -->
     <div id="view-shared" class="flex-1 flex flex-col items-center justify-center p-4 bg-gray-900 hidden">
         <div class="max-w-md w-full flex flex-col items-center gap-6">
             <h1 class="text-white text-2xl font-bold tracking-widest text-center">✨ 回憶珍藏 ✨</h1>
@@ -161,7 +148,7 @@
         </div>
     </div>
 
-    <!-- ⭐ 新增：邊框選擇選單視窗 (電腦版變為寬度更大的九宮格) -->
+    <!-- 邊框選擇選單視窗 -->
     <div id="modal-frame-select" class="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center hidden backdrop-blur-sm p-4 pb-0 sm:pb-4 transition-opacity">
         <div class="bg-white rounded-t-3xl sm:rounded-3xl p-6 md:p-8 w-full max-w-md sm:max-w-2xl lg:max-w-4xl shadow-2xl relative max-h-[60vh] sm:max-h-[80vh] flex flex-col">
             <div class="flex justify-between items-center mb-4 md:mb-6 border-b pb-3 md:pb-4">
@@ -171,6 +158,42 @@
             <div id="frame-select-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-6 overflow-y-auto no-scrollbar pb-6">
                 <!-- 縮圖將由 JS 動態生成 -->
             </div>
+        </div>
+    </div>
+
+    <!-- 修改密碼視窗 -->
+    <div id="modal-change-password" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm p-4 transition-opacity">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl relative">
+            <button id="btn-close-password-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center"><i class="fa-solid fa-key text-pink-500 mr-2"></i>修改密碼</h2>
+            <form id="form-change-password" class="flex flex-col gap-4">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">新密碼</label>
+                    <input type="password" id="new-password" required placeholder="輸入新密碼 (至少6碼)" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 bg-gray-50">
+                </div>
+                <button type="submit" class="w-full bg-pink-500 text-white py-3 rounded-xl text-base font-bold hover:bg-pink-600 transition mt-2 shadow-md">更新密碼</button>
+            </form>
+            <p id="change-pwd-msg" class="text-sm text-center mt-4 hidden"></p>
+        </div>
+    </div>
+
+    <!-- 新增協作者視窗 -->
+    <div id="modal-add-collaborator" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm p-4 transition-opacity">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl relative">
+            <button id="btn-close-collab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center"><i class="fa-solid fa-user-plus text-pink-500 mr-2"></i>新增協作者</h2>
+            <form id="form-add-collaborator" class="flex flex-col gap-4">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">協作者帳號</label>
+                    <input type="text" id="new-collab-username" required placeholder="例：user1" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">初始密碼</label>
+                    <input type="password" id="new-collab-password" required placeholder="設定密碼 (至少6碼)" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 bg-gray-50">
+                </div>
+                <button type="submit" class="w-full bg-gray-800 text-white py-3 rounded-xl text-base font-bold hover:bg-gray-900 transition mt-2 shadow-md">建立帳號</button>
+            </form>
+            <p id="add-collab-msg" class="text-sm text-center mt-4 hidden"></p>
         </div>
     </div>
 
@@ -202,14 +225,12 @@
         <!-- 頂部導航 -->
         <header class="bg-white/80 shadow-sm px-6 py-4 flex justify-between items-center z-10 border-b border-gray-200">
             <h1 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
-                <!-- ⭐ 放大後台的 Logo，加入位移校正置中 -->
                 <div class="w-10 h-10 md:w-12 md:h-12 mr-3 rounded-full overflow-hidden border border-gray-200 shadow-sm bg-white flex items-center justify-center shrink-0">
                     <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.6] -translate-x-[8%] -translate-y-[4%]">
                 </div>
                 後台管理
             </h1>
             <div class="flex gap-4 items-center">
-                <!-- ⭐ 新增：顯示目前登入者的身分與帳號 -->
                 <span id="admin-user-display" class="text-sm font-bold text-pink-600 hidden md:block bg-pink-50 px-3 py-1 rounded-full border border-pink-100"></span>
                 <button id="btn-admin-home" class="text-gray-600 hover:text-pink-500 px-3 py-1"><i class="fa-solid fa-house"></i> 回首頁</button>
                 <button id="btn-logout" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-300">登出</button>
@@ -220,19 +241,18 @@
         <div class="flex-1 overflow-auto p-6">
             <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
-                <!-- 照片管理區 (佔2欄) -->
-                <div class="lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col">
+                <!-- 照片管理區 -->
+                <div class="lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col h-fit">
                     <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">雲端照片庫</h2>
-                    <!-- ⭐ 修改重點：加入 content-start，強制所有照片往上緊密排列，消除異常巨大的上下留白 -->
-                    <div id="admin-photos-grid" class="grid grid-cols-2 md:grid-cols-3 gap-2 content-start no-scrollbar overflow-y-auto flex-1 min-h-[50vh] p-1">
+                    <div id="admin-photos-grid" class="grid grid-cols-2 md:grid-cols-3 gap-2 content-start no-scrollbar overflow-y-auto max-h-[60vh] p-1 mb-2">
                         <!-- 照片動態生成 -->
                         <div class="col-span-full text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin"></i> 載入中...</div>
                     </div>
-                    <!-- ⭐ 新增：分頁按鈕容器 -->
+                    <!-- 分頁按鈕容器 -->
                     <div id="admin-photos-pagination" class="mt-2 border-t border-gray-100"></div>
                 </div>
 
-                <!-- 右側選單區 (佔1欄，群組化) -->
+                <!-- 右側選單區 -->
                 <div class="flex flex-col gap-6 h-fit">
                     <!-- 邊框管理區 -->
                     <div class="bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col h-fit">
@@ -248,32 +268,22 @@
 
                         <div class="flex-1 overflow-y-auto no-scrollbar max-h-[30vh]">
                             <ul id="admin-frames-list" class="flex flex-col gap-3">
-                                <!-- 邊框清單動態生成 -->
                                 <li class="text-center text-gray-400 py-4"><i class="fa-solid fa-spinner fa-spin"></i> 載入中...</li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- 修改密碼區 -->
+                    <!-- 系統設定區 -->
                     <div class="bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col h-fit">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">修改密碼</h2>
-                        <form id="form-change-password" class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                            <input type="password" id="new-password" required placeholder="輸入新密碼 (至少6碼)" class="w-full text-sm px-3 py-2 border rounded-lg mb-3 focus:outline-none focus:ring-1 focus:ring-pink-300">
-                            <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-pink-600 transition">更新密碼</button>
-                        </form>
-                        <p id="change-pwd-msg" class="text-sm text-center mt-3 hidden"></p>
-                    </div>
-
-                    <!-- 協作者管理區 -->
-                    <!-- ⭐ 修改：加入 ID 以便根據權限動態隱藏 -->
-                    <div id="section-add-collaborator" class="bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col h-fit">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">新增協作者</h2>
-                        <form id="form-add-collaborator" class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                            <input type="text" id="new-collab-username" required placeholder="協作者帳號 (如: user1)" class="w-full text-sm px-3 py-2 border rounded-lg mb-2 focus:outline-none focus:ring-1 focus:ring-pink-300">
-                            <input type="password" id="new-collab-password" required placeholder="設定密碼 (至少6碼)" class="w-full text-sm px-3 py-2 border rounded-lg mb-3 focus:outline-none focus:ring-1 focus:ring-pink-300">
-                            <button type="submit" class="w-full bg-gray-800 text-white py-2 rounded-lg text-sm font-bold hover:bg-gray-900 transition">建立協作者帳號</button>
-                        </form>
-                        <p id="add-collab-msg" class="text-sm text-center mt-3 hidden"></p>
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">系統設定</h2>
+                        <div class="flex flex-col gap-3">
+                            <button id="btn-open-password-modal" class="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl text-sm font-bold transition shadow-sm">
+                                <i class="fa-solid fa-key"></i> 修改密碼
+                            </button>
+                            <button id="btn-open-collab-modal" class="w-full flex items-center justify-center gap-2 bg-pink-50 hover:bg-pink-100 text-pink-600 py-3 rounded-xl text-sm font-bold transition shadow-sm hidden">
+                                <i class="fa-solid fa-user-plus"></i> 新增協作者
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -297,8 +307,8 @@
         
         // UI 狀態
         let currentMode = 'init'; // 'booth', 'result', 'shared', 'admin'
-        
-        // ⭐ 新增：分頁狀態變數
+
+        // 分頁狀態變數
         let allAdminPhotos = []; 
         let currentPhotoPage = 1; 
         const PHOTOS_PER_PAGE = 6; 
@@ -324,9 +334,9 @@
         let lastVideoTime = -1;
 
         // ==========================================
-        // 初始化 Firebase
+        // 初始化 Firebase (若有填入真實的 config 則會連線)
         // ==========================================
-        const firebaseConfig = {
+  const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -349,7 +359,8 @@
         // ==========================================
         // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
         // ==========================================
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
+     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
+
         // ==========================================
         // 生成預設邊框
         // ==========================================
@@ -374,14 +385,12 @@
             </svg>
         `);
 
-        // 新增預設邊框 3：可愛海兔 (請換成您自己的 GitHub Raw 或 Imgur 網址)
-        const defaultFrame3 = "https://raw.githubusercontent.com/您的帳號/專案名稱/main/可愛海兔去背版.png";
+        const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/03.png";
 
-        // ⭐ 新增常數：整合所有預設邊框，讓系統與後台能統一讀取
         const DEFAULT_FRAMES = [
             { id: 'def1', url: defaultFrame1, name: 'Love Moment', isDefault: true },
             { id: 'def2', url: defaultFrame2, name: 'Film Strip', isDefault: true },
-            { id: 'def3', url: defaultFrame3, name: '可愛海兔', isDefault: true }
+            { id: 'def3', url: defaultFrame3, name: '可愛猴子', isDefault: true }
         ];
 
         // ==========================================
@@ -485,7 +494,6 @@
                 try {
                     const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
                     unsubscribeFrames = onSnapshot(framesRef, (snapshot) => {
-                        // ⭐ 將預設邊框與資料庫邊框合併，不再互相覆蓋
                         frames = [...DEFAULT_FRAMES];
                         snapshot.forEach(doc => frames.push({ id: doc.id, ...doc.data(), isDefault: false }));
                         if (currentFrameIndex >= frames.length) currentFrameIndex = 0;
@@ -506,7 +514,6 @@
 
             await initMediaPipe();
             
-            // ⭐ 修復 Bug：重拍回來時，確保渲染迴圈被重新啟動，畫面才不會凍結
             if (isWebcamRunning) {
                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
                 animationFrameId = requestAnimationFrame(renderLoop);
@@ -517,7 +524,6 @@
 
         function updateFrameImage() {
             if (frames.length > 0) {
-                // Base64 格式不需要 crossOrigin，避免部分瀏覽器報錯
                 if (!frames[currentFrameIndex].url.startsWith('data:')) {
                     currentFrameImage.crossOrigin = "anonymous"; 
                 } else {
@@ -739,7 +745,6 @@
             document.getElementById('gesture-hint').classList.remove('hidden');
         });
 
-        // ⭐ 新增：打開邊框選單視窗
         document.getElementById('btn-open-frame-select').addEventListener('click', () => {
             const grid = document.getElementById('frame-select-grid');
             grid.innerHTML = '';
@@ -750,7 +755,6 @@
                 
                 div.className = `cursor-pointer rounded-xl overflow-hidden border-4 checkerboard relative aspect-square transition transform hover:scale-105 ${isSelected ? 'border-pink-500 shadow-md ring-2 ring-pink-200' : 'border-gray-100 hover:border-pink-300'}`;
                 
-                // 改為安全綁定模式，並加入無效提示
                 div.innerHTML = `
                     <img class="popup-frame-img w-full h-full object-contain absolute inset-0 z-10 drop-shadow-sm">
                     <div class="error-overlay hidden absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center text-red-500 text-xs font-bold"><i class="fa-solid fa-triangle-exclamation mb-1 text-lg"></i>圖片失效</div>
@@ -768,10 +772,10 @@
                     imgEl.style.display = 'none'; 
                     errOverlay.classList.remove('hidden');
                 };
-                imgEl.src = f.url; // 安全載入
+                imgEl.src = f.url; 
                 
                 div.onclick = () => {
-                    if (!errOverlay.classList.contains('hidden')) return; // 無效圖片不給選
+                    if (!errOverlay.classList.contains('hidden')) return; 
                     currentFrameIndex = idx;
                     updateFrameImage();
                     document.getElementById('modal-frame-select').classList.add('hidden');
@@ -783,27 +787,24 @@
             document.getElementById('modal-frame-select').classList.remove('hidden');
         });
 
-        // ⭐ 新增：關閉邊框選單視窗
         document.getElementById('btn-close-frame-select').addEventListener('click', () => {
             document.getElementById('modal-frame-select').classList.add('hidden');
         });
 
-        // ==========================================
-        // 後台管理系統邏輯
-        // ==========================================
         const getFakeEmail = (username) => `${username.trim().toLowerCase()}@photobooth.local`;
 
         document.getElementById('btn-go-admin').addEventListener('click', () => {
             if (auth && auth.currentUser && auth.currentUser.email) {
                 setupAdminDashboard();
             } else {
-                switchView('modal-admin-login');
-                document.getElementById('view-booth').classList.remove('hidden'); 
+                document.getElementById('modal-admin-login').classList.remove('hidden');
+                document.getElementById('view-booth').classList.add('hidden'); 
             }
         });
 
         document.getElementById('btn-close-login').addEventListener('click', () => {
             document.getElementById('modal-admin-login').classList.add('hidden');
+            setupBoothMode();
         });
 
         document.getElementById('form-login').addEventListener('submit', async (e) => {
@@ -815,11 +816,9 @@
             errorEl.classList.add('hidden');
 
             try {
-                // 1. 嘗試正常登入
                 await signInWithEmailAndPassword(auth, email, pwd);
                 setupAdminDashboard();
             } catch (err) {
-                // 2. 如果是預設管理員且登入失敗，嘗試註冊
                 if (username === 'admin' && pwd === 'admin123') {
                     try {
                         await createUserWithEmailAndPassword(auth, email, pwd);
@@ -827,7 +826,6 @@
                         return;
                     } catch (createErr) {
                         console.warn("帳號建立失敗:", createErr);
-                        // ⭐ 優化：給予更清楚、白話的錯誤提示
                         if (createErr.code === 'auth/operation-not-allowed') {
                             errorEl.innerHTML = "系統設定未完成：<br>請至 Firebase 後台啟用「電子郵件/密碼」登入方式！";
                         } else if (createErr.code === 'auth/email-already-in-use') {
@@ -839,8 +837,6 @@
                         return;
                     }
                 }
-                
-                // 3. 其他一般錯誤
                 errorEl.innerText = "登入失敗：帳號或密碼錯誤。";
                 errorEl.classList.remove('hidden');
             }
@@ -852,7 +848,6 @@
 
             if (!currentUserId || !auth.currentUser) return; 
 
-            // ⭐ 判斷身分與更新 UI
             const email = auth.currentUser.email || '';
             const username = email.split('@')[0];
             const isAdmin = username === 'admin';
@@ -862,15 +857,14 @@
                 userDisplay.innerText = `${isAdmin ? '👑 管理者' : '👤 協作者'}：${username}`;
             }
 
-            // ⭐ 權限控管：協作者看不到「新增協作者」的區塊
-            const collabSection = document.getElementById('section-add-collaborator');
-            if (collabSection) {
+            const btnCollabModal = document.getElementById('btn-open-collab-modal');
+            if (btnCollabModal) {
                 if (isAdmin) {
-                    collabSection.classList.remove('hidden');
-                    collabSection.classList.add('flex');
+                    btnCollabModal.classList.remove('hidden');
+                    btnCollabModal.classList.add('flex');
                 } else {
-                    collabSection.classList.add('hidden');
-                    collabSection.classList.remove('flex');
+                    btnCollabModal.classList.add('hidden');
+                    btnCollabModal.classList.remove('flex');
                 }
             }
 
@@ -879,11 +873,9 @@
                 if(unsubscribePhotos) unsubscribePhotos();
                 
                 unsubscribePhotos = onSnapshot(photosRef, (snapshot) => {
-                    // ⭐ 將抓回來的資料存入全域變數，而非區域變數
                     allAdminPhotos = [];
                     snapshot.forEach(doc => allAdminPhotos.push({ id: doc.id, ...doc.data() }));
                     allAdminPhotos.sort((a, b) => b.timestamp - a.timestamp);
-                    // ⭐ 執行分頁渲染 (不需要再傳參數進去)
                     renderAdminPhotos();
                 }, (err) => {
                     console.error("Admin photos err:", err);
@@ -892,7 +884,6 @@
 
                 const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
                 onSnapshot(framesRef, (snapshot) => {
-                    // ⭐ 在後台也將預設邊框加入列表
                     let localFrames = [...DEFAULT_FRAMES];
                     snapshot.forEach(doc => localFrames.push({ id: doc.id, ...doc.data(), isDefault: false }));
                     renderAdminFrames(localFrames);
@@ -906,7 +897,6 @@
             }
         }
 
-        // ⭐ 完整改寫：支援分頁的相片渲染函式
         function renderAdminPhotos() {
             const grid = document.getElementById('admin-photos-grid');
             const paginationContainer = document.getElementById('admin-photos-pagination');
@@ -918,12 +908,10 @@
                 return;
             }
 
-            // 計算總頁數與修正當前頁數 (防呆：若刪除了最後一頁的最後一張照片，會自動跳回前一頁)
             const totalPages = Math.ceil(allAdminPhotos.length / PHOTOS_PER_PAGE);
             if (currentPhotoPage > totalPages) currentPhotoPage = totalPages;
             if (currentPhotoPage < 1) currentPhotoPage = 1;
 
-            // 切割當前頁面需要顯示的照片
             const startIndex = (currentPhotoPage - 1) * PHOTOS_PER_PAGE;
             const endIndex = startIndex + PHOTOS_PER_PAGE;
             const currentPhotos = allAdminPhotos.slice(startIndex, endIndex);
@@ -933,7 +921,6 @@
                 const src = photo.imageUrl || photo.imageData; 
                 const div = document.createElement('div');
                 div.className = "relative group rounded-xl overflow-hidden shadow-sm border h-fit";
-                // 改為安全綁定模式
                 div.innerHTML = `
                     <img class="admin-photo-img w-full aspect-square object-cover" loading="lazy">
                     <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2">
@@ -946,7 +933,7 @@
                 
                 const imgEl = div.querySelector('.admin-photo-img');
                 imgEl.referrerPolicy = "no-referrer";
-                imgEl.src = src; // 安全載入
+                imgEl.src = src; 
                 
                 grid.appendChild(div);
             });
@@ -974,16 +961,13 @@
                 });
             });
 
-            // 渲染分頁按鈕列
             renderPaginationControls(totalPages);
         }
 
-        // ⭐ 新增：獨立處理分頁控制列的渲染與點擊事件
         function renderPaginationControls(totalPages) {
             const container = document.getElementById('admin-photos-pagination');
             if (!container) return;
 
-            // 如果只有 1 頁或沒照片，就不顯示分頁按鈕
             if (totalPages <= 1) {
                 container.innerHTML = '';
                 return;
@@ -1032,7 +1016,6 @@
                 return;
             }
 
-            // ⭐ 取得目前登入者的資訊
             const currentUser = auth.currentUser;
             const currentUid = currentUser ? currentUser.uid : null;
             const username = currentUser ? currentUser.email.split('@')[0] : '';
@@ -1042,7 +1025,6 @@
                 const li = document.createElement('li');
                 li.className = "flex items-center gap-3 p-2 bg-gray-50 rounded-lg border";
                 
-                // ⭐ 判斷刪除權限：管理者可刪所有非預設，協作者只能刪自己上傳的
                 const isUploader = frame.uploaderUid === currentUid;
                 const canDelete = !frame.isDefault && (isAdmin || isUploader);
                 
@@ -1054,11 +1036,9 @@
                         <i class="fa-solid fa-trash"></i>
                        </button>`;
                 } else {
-                    // 如果沒權限刪除，顯示是誰上傳的
                     actionHtml = `<span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded shadow-sm whitespace-nowrap">來自: ${frame.uploaderName || '其他人'}</span>`;
                 }
 
-                // 加入明確的錯誤標示與操作按鈕
                 li.innerHTML = `
                     <div class="w-16 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0 relative checkerboard flex items-center justify-center">
                         <i class="fa-solid fa-image-slash text-gray-400 absolute z-0 text-xl"></i>
@@ -1102,7 +1082,6 @@
             const submitBtn = e.target.querySelector('button');
             
             const name = nameInput.value.trim();
-            // 過濾掉使用者可能誤貼的引號
             const url = urlInput.value.trim().replace(/^['"]+/, '').replace(/['"]+$/, '');
             
             if(!url) return;
@@ -1111,7 +1090,6 @@
             submitBtn.innerText = "驗證圖片中...";
 
             const testImg = new Image();
-            // ⭐ 修正：如果是 Base64 格式，就不要加跨域屬性，避免被瀏覽器誤擋
             if (!url.startsWith('data:')) {
                 testImg.crossOrigin = "anonymous"; 
             }
@@ -1120,7 +1098,6 @@
                 submitBtn.innerText = "新增中...";
                 try {
                     const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
-                    // ⭐ 新增時紀錄是誰上傳的，以便後續判斷修改權限
                     const uploaderName = auth.currentUser ? auth.currentUser.email.split('@')[0] : 'unknown';
                     await addDoc(framesRef, {
                         name: name,
@@ -1149,6 +1126,28 @@
             testImg.src = url;
         });
 
+        // ==========================================
+        // 系統設定：視窗開關與表單提交邏輯
+        // ==========================================
+        const modalPwd = document.getElementById('modal-change-password');
+        const modalCollab = document.getElementById('modal-add-collaborator');
+
+        document.getElementById('btn-open-password-modal')?.addEventListener('click', () => {
+            modalPwd.classList.remove('hidden');
+            document.getElementById('change-pwd-msg').classList.add('hidden');
+        });
+        document.getElementById('btn-close-password-modal')?.addEventListener('click', () => {
+            modalPwd.classList.add('hidden');
+        });
+
+        document.getElementById('btn-open-collab-modal')?.addEventListener('click', () => {
+            modalCollab.classList.remove('hidden');
+            document.getElementById('add-collab-msg').classList.add('hidden');
+        });
+        document.getElementById('btn-close-collab-modal')?.addEventListener('click', () => {
+            modalCollab.classList.add('hidden');
+        });
+
         const formChangePassword = document.getElementById('form-change-password');
         if (formChangePassword) {
             formChangePassword.addEventListener('submit', async (e) => {
@@ -1162,23 +1161,22 @@
                 btn.innerText = "更新中...";
 
                 try {
-                    // ⭐ 防呆機制：確認目前帳號是否允許修改密碼
                     if (!auth.currentUser || auth.currentUser.isAnonymous) {
                         throw new Error("目前為訪客身分或測試模式，無法修改密碼。");
                     }
                     await updatePassword(auth.currentUser, newPwd);
                     msgEl.innerText = "✅ 密碼更新成功！";
-                    msgEl.className = "text-sm text-center mt-3 text-green-600 font-bold";
+                    msgEl.className = "text-sm text-center mt-4 text-green-600 font-bold bg-green-50 py-2 rounded-lg";
                     e.target.reset();
+                    setTimeout(() => { modalPwd.classList.add('hidden'); }, 1500);
                 } catch (err) {
                     console.error("修改密碼失敗:", err);
                     if (err.code === 'auth/requires-recent-login') {
-                        msgEl.innerText = "❌ 安全驗證過期，請登出後再重新登入修改。";
+                        msgEl.innerText = "❌ 安全驗證過期，請登出後再重新登入。";
                     } else {
-                        // 將詳細錯誤印在畫面上
                         msgEl.innerText = "❌ 更新失敗：" + (err.message || err.toString());
                     }
-                    msgEl.className = "text-sm text-center mt-3 text-red-500 font-bold break-words";
+                    msgEl.className = "text-sm text-center mt-4 text-red-500 font-bold bg-red-50 py-2 rounded-lg break-words";
                 } finally {
                     msgEl.classList.remove('hidden');
                     btn.disabled = false;
@@ -1202,7 +1200,6 @@
                 btn.innerText = "建立中...";
 
                 try {
-                    // ⭐ 修正 Bug：給予動態的 App 名稱，避免重複點擊時拋出衝突錯誤
                     const appName = "SecondaryApp_" + Date.now();
                     const secondaryApp = initializeApp(firebaseConfig, appName);
                     const secondaryAuth = getAuth(secondaryApp);
@@ -1211,17 +1208,17 @@
                     await signOut(secondaryAuth); 
                     
                     msgEl.innerText = "✅ 協作者建立成功！";
-                    msgEl.className = "text-sm text-center mt-3 text-green-600 font-bold";
+                    msgEl.className = "text-sm text-center mt-4 text-green-600 font-bold bg-green-50 py-2 rounded-lg";
                     e.target.reset();
+                    setTimeout(() => { modalCollab.classList.add('hidden'); }, 1500);
                 } catch (err) {
                     console.error("建立協作者失敗:", err);
-                    // 將詳細錯誤印在畫面上
                     msgEl.innerText = "❌ 建立失敗：" + (err.message || err.toString());
-                    msgEl.className = "text-sm text-center mt-3 text-red-500 font-bold break-words";
+                    msgEl.className = "text-sm text-center mt-4 text-red-500 font-bold bg-red-50 py-2 rounded-lg break-words";
                 } finally {
                     msgEl.classList.remove('hidden');
                     btn.disabled = false;
-                    btn.innerText = "建立協作者帳號";
+                    btn.innerText = "建立帳號";
                 }
             });
         }
