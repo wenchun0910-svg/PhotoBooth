@@ -209,6 +209,8 @@
                 後台管理
             </h1>
             <div class="flex gap-4 items-center">
+                <!-- ⭐ 新增：顯示目前登入者的身分與帳號 -->
+                <span id="admin-user-display" class="text-sm font-bold text-pink-600 hidden md:block bg-pink-50 px-3 py-1 rounded-full border border-pink-100"></span>
                 <button id="btn-admin-home" class="text-gray-600 hover:text-pink-500 px-3 py-1"><i class="fa-solid fa-house"></i> 回首頁</button>
                 <button id="btn-logout" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-300">登出</button>
             </div>
@@ -219,12 +221,15 @@
             <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
                 <!-- 照片管理區 (佔2欄) -->
-                <div class="lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 border border-gray-100">
+                <div class="lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col">
                     <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">雲端照片庫</h2>
-                    <div id="admin-photos-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 no-scrollbar overflow-y-auto max-h-[70vh] p-2">
+                    <!-- ⭐ 稍微調整高度屬性，讓分頁按鈕能固定在下方 -->
+                    <div id="admin-photos-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 no-scrollbar overflow-y-auto flex-1 min-h-[50vh] p-2">
                         <!-- 照片動態生成 -->
                         <div class="col-span-full text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin"></i> 載入中...</div>
                     </div>
+                    <!-- ⭐ 新增：分頁按鈕容器 -->
+                    <div id="admin-photos-pagination" class="mt-2 border-t border-gray-100"></div>
                 </div>
 
                 <!-- 右側選單區 (佔1欄，群組化) -->
@@ -260,7 +265,8 @@
                     </div>
 
                     <!-- 協作者管理區 -->
-                    <div class="bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col h-fit">
+                    <!-- ⭐ 修改：加入 ID 以便根據權限動態隱藏 -->
+                    <div id="section-add-collaborator" class="bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col h-fit">
                         <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">新增協作者</h2>
                         <form id="form-add-collaborator" class="bg-gray-50 p-4 rounded-xl border border-gray-200">
                             <input type="text" id="new-collab-username" required placeholder="協作者帳號 (如: user1)" class="w-full text-sm px-3 py-2 border rounded-lg mb-2 focus:outline-none focus:ring-1 focus:ring-pink-300">
@@ -291,6 +297,11 @@
         
         // UI 狀態
         let currentMode = 'init'; // 'booth', 'result', 'shared', 'admin'
+        
+        // ⭐ 新增：分頁狀態變數
+        let allAdminPhotos = []; 
+        let currentPhotoPage = 1; 
+        const PHOTOS_PER_PAGE = 6; 
 
         // 拍貼機狀態
         const video = document.getElementById('webcam');
@@ -315,7 +326,7 @@
         // ==========================================
         // 初始化 Firebase
         // ==========================================
-          const firebaseConfig = {
+      const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -338,7 +349,7 @@
         // ==========================================
         // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
         // ==========================================
-     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
+       const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
 
         // ==========================================
         // 生成預設邊框
@@ -364,14 +375,14 @@
             </svg>
         `);
 
-        // 新增預設邊框 3：可愛猴子 (請換成您自己的 GitHub Raw 或 Imgur 網址)
-     const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/03.png";
+        // 新增預設邊框 3：可愛海兔 (請換成您自己的 GitHub Raw 或 Imgur 網址)
+    const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/03.png";
 
         // ⭐ 新增常數：整合所有預設邊框，讓系統與後台能統一讀取
         const DEFAULT_FRAMES = [
             { id: 'def1', url: defaultFrame1, name: 'Love Moment', isDefault: true },
             { id: 'def2', url: defaultFrame2, name: 'Film Strip', isDefault: true },
-            { id: 'def3', url: defaultFrame3, name: '可愛海兔', isDefault: true }
+            { id: 'def3', url: defaultFrame3, name: '可愛猴子', isDefault: true }
         ];
 
         // ==========================================
@@ -805,9 +816,11 @@
             errorEl.classList.add('hidden');
 
             try {
+                // 1. 嘗試正常登入
                 await signInWithEmailAndPassword(auth, email, pwd);
                 setupAdminDashboard();
             } catch (err) {
+                // 2. 如果是預設管理員且登入失敗，嘗試註冊
                 if (username === 'admin' && pwd === 'admin123') {
                     try {
                         await createUserWithEmailAndPassword(auth, email, pwd);
@@ -815,11 +828,18 @@
                         return;
                     } catch (createErr) {
                         console.warn("帳號建立失敗:", createErr);
-                        currentUserId = currentUserId || 'sandbox-admin-uid';
-                        setupAdminDashboard();
+                        // ⭐ 修改：移除沙盒模式，顯示最真實的錯誤，提示去 Firebase 開啟權限
+                        if (createErr.code === 'auth/operation-not-allowed') {
+                            errorEl.innerHTML = "系統設定未完成：<br>請至 Firebase 後台啟用「電子郵件/密碼」登入方式！";
+                        } else {
+                            errorEl.innerText = "帳號建立失敗：" + (createErr.message || createErr.toString());
+                        }
+                        errorEl.classList.remove('hidden');
                         return;
                     }
                 }
+                
+                // 3. 其他一般錯誤
                 errorEl.innerText = "登入失敗：請檢查帳號密碼，或確認是否已由管理員加入。";
                 errorEl.classList.remove('hidden');
             }
@@ -829,17 +849,41 @@
             currentMode = 'admin';
             switchView('view-admin-dashboard');
 
-            if (!currentUserId) return; 
+            if (!currentUserId || !auth.currentUser) return; 
+
+            // ⭐ 判斷身分與更新 UI
+            const email = auth.currentUser.email || '';
+            const username = email.split('@')[0];
+            const isAdmin = username === 'admin';
+            
+            const userDisplay = document.getElementById('admin-user-display');
+            if (userDisplay) {
+                userDisplay.innerText = `${isAdmin ? '👑 管理者' : '👤 協作者'}：${username}`;
+            }
+
+            // ⭐ 權限控管：協作者看不到「新增協作者」的區塊
+            const collabSection = document.getElementById('section-add-collaborator');
+            if (collabSection) {
+                if (isAdmin) {
+                    collabSection.classList.remove('hidden');
+                    collabSection.classList.add('flex');
+                } else {
+                    collabSection.classList.add('hidden');
+                    collabSection.classList.remove('flex');
+                }
+            }
 
             if(db) {
                 const photosRef = collection(db, 'artifacts', appId, 'public', 'data', 'photos');
                 if(unsubscribePhotos) unsubscribePhotos();
                 
                 unsubscribePhotos = onSnapshot(photosRef, (snapshot) => {
-                    let photos = [];
-                    snapshot.forEach(doc => photos.push({ id: doc.id, ...doc.data() }));
-                    photos.sort((a, b) => b.timestamp - a.timestamp);
-                    renderAdminPhotos(photos);
+                    // ⭐ 將抓回來的資料存入全域變數，而非區域變數
+                    allAdminPhotos = [];
+                    snapshot.forEach(doc => allAdminPhotos.push({ id: doc.id, ...doc.data() }));
+                    allAdminPhotos.sort((a, b) => b.timestamp - a.timestamp);
+                    // ⭐ 執行分頁渲染 (不需要再傳參數進去)
+                    renderAdminPhotos();
                 }, (err) => {
                     console.error("Admin photos err:", err);
                     document.getElementById('admin-photos-grid').innerHTML = `<div class="col-span-full text-center text-red-500 py-10"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i><br>資料庫讀取失敗<br><span class="text-xs text-gray-500 mt-2 block">${err.message}</span></div>`;
@@ -861,20 +905,33 @@
             }
         }
 
-        function renderAdminPhotos(photos) {
+        // ⭐ 完整改寫：支援分頁的相片渲染函式
+        function renderAdminPhotos() {
             const grid = document.getElementById('admin-photos-grid');
+            const paginationContainer = document.getElementById('admin-photos-pagination');
             grid.innerHTML = '';
             
-            if (photos.length === 0) {
+            if (allAdminPhotos.length === 0) {
                 grid.innerHTML = '<div class="col-span-full text-center text-gray-400 py-10">尚無照片記錄</div>';
+                if(paginationContainer) paginationContainer.innerHTML = '';
                 return;
             }
 
-            photos.forEach(photo => {
+            // 計算總頁數與修正當前頁數 (防呆：若刪除了最後一頁的最後一張照片，會自動跳回前一頁)
+            const totalPages = Math.ceil(allAdminPhotos.length / PHOTOS_PER_PAGE);
+            if (currentPhotoPage > totalPages) currentPhotoPage = totalPages;
+            if (currentPhotoPage < 1) currentPhotoPage = 1;
+
+            // 切割當前頁面需要顯示的照片
+            const startIndex = (currentPhotoPage - 1) * PHOTOS_PER_PAGE;
+            const endIndex = startIndex + PHOTOS_PER_PAGE;
+            const currentPhotos = allAdminPhotos.slice(startIndex, endIndex);
+
+            currentPhotos.forEach(photo => {
                 const dateStr = new Date(photo.timestamp).toLocaleString('zh-TW', { hour12: false });
                 const src = photo.imageUrl || photo.imageData; 
                 const div = document.createElement('div');
-                div.className = "relative group rounded-xl overflow-hidden shadow-sm border";
+                div.className = "relative group rounded-xl overflow-hidden shadow-sm border h-fit";
                 // 改為安全綁定模式
                 div.innerHTML = `
                     <img class="admin-photo-img w-full aspect-square object-cover" loading="lazy">
@@ -915,6 +972,54 @@
                     }
                 });
             });
+
+            // 渲染分頁按鈕列
+            renderPaginationControls(totalPages);
+        }
+
+        // ⭐ 新增：獨立處理分頁控制列的渲染與點擊事件
+        function renderPaginationControls(totalPages) {
+            const container = document.getElementById('admin-photos-pagination');
+            if (!container) return;
+
+            // 如果只有 1 頁或沒照片，就不顯示分頁按鈕
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="flex justify-center items-center gap-4 pt-4 w-full">
+                    <button id="btn-page-prev" class="px-4 py-2 rounded-full text-sm font-bold transition ${currentPhotoPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-pink-100 text-pink-600 hover:bg-pink-200 shadow-sm'}" ${currentPhotoPage === 1 ? 'disabled' : ''}>
+                        <i class="fa-solid fa-chevron-left mr-1"></i> 上一頁
+                    </button>
+                    <span class="text-sm font-bold text-gray-600">第 ${currentPhotoPage} / ${totalPages} 頁</span>
+                    <button id="btn-page-next" class="px-4 py-2 rounded-full text-sm font-bold transition ${currentPhotoPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-pink-100 text-pink-600 hover:bg-pink-200 shadow-sm'}" ${currentPhotoPage === totalPages ? 'disabled' : ''}>
+                        下一頁 <i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            `;
+
+            const btnPrev = document.getElementById('btn-page-prev');
+            const btnNext = document.getElementById('btn-page-next');
+
+            if (btnPrev) {
+                btnPrev.addEventListener('click', () => {
+                    if (currentPhotoPage > 1) {
+                        currentPhotoPage--;
+                        renderAdminPhotos();
+                    }
+                });
+            }
+
+            if (btnNext) {
+                btnNext.addEventListener('click', () => {
+                    if (currentPhotoPage < totalPages) {
+                        currentPhotoPage++;
+                        renderAdminPhotos();
+                    }
+                });
+            }
         }
 
         function renderAdminFrames(localFrames) {
@@ -926,16 +1031,31 @@
                 return;
             }
 
+            // ⭐ 取得目前登入者的資訊
+            const currentUser = auth.currentUser;
+            const currentUid = currentUser ? currentUser.uid : null;
+            const username = currentUser ? currentUser.email.split('@')[0] : '';
+            const isAdmin = username === 'admin';
+
             localFrames.forEach(frame => {
                 const li = document.createElement('li');
                 li.className = "flex items-center gap-3 p-2 bg-gray-50 rounded-lg border";
                 
-                // ⭐ 判斷是否為預設邊框，預設邊框顯示標籤且不可刪除
-                const actionHtml = frame.isDefault
-                    ? `<span class="text-xs text-pink-600 bg-pink-100 px-2 py-1 rounded font-bold shadow-sm whitespace-nowrap">系統預設</span>`
-                    : `<button class="text-red-400 hover:text-red-600 p-2 btn-del-frame" data-id="${frame.id}">
+                // ⭐ 判斷刪除權限：管理者可刪所有非預設，協作者只能刪自己上傳的
+                const isUploader = frame.uploaderUid === currentUid;
+                const canDelete = !frame.isDefault && (isAdmin || isUploader);
+                
+                let actionHtml = '';
+                if (frame.isDefault) {
+                    actionHtml = `<span class="text-xs text-pink-600 bg-pink-100 px-2 py-1 rounded font-bold shadow-sm whitespace-nowrap">系統預設</span>`;
+                } else if (canDelete) {
+                    actionHtml = `<button class="text-red-400 hover:text-red-600 p-2 btn-del-frame" data-id="${frame.id}">
                         <i class="fa-solid fa-trash"></i>
                        </button>`;
+                } else {
+                    // 如果沒權限刪除，顯示是誰上傳的
+                    actionHtml = `<span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded shadow-sm whitespace-nowrap">來自: ${frame.uploaderName || '其他人'}</span>`;
+                }
 
                 // 加入明確的錯誤標示與操作按鈕
                 li.innerHTML = `
@@ -999,10 +1119,14 @@
                 submitBtn.innerText = "新增中...";
                 try {
                     const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
+                    // ⭐ 新增時紀錄是誰上傳的，以便後續判斷修改權限
+                    const uploaderName = auth.currentUser ? auth.currentUser.email.split('@')[0] : 'unknown';
                     await addDoc(framesRef, {
                         name: name,
                         url: url,
-                        timestamp: Date.now()
+                        timestamp: Date.now(),
+                        uploaderUid: auth.currentUser ? auth.currentUser.uid : null,
+                        uploaderName: uploaderName
                     });
                     nameInput.value = '';
                     urlInput.value = '';
