@@ -44,13 +44,13 @@
     </script>
 </head>
 <!-- ⭐ 修改1：將 overflow-hidden 改為 overflow-x-hidden，允許畫面垂直捲動 -->
-<body class="min-h-screen text-gray-800 flex flex-col overflow-x-hidden" style="background-image: url('bk.jpg'); background-size: cover; background-position: center; background-attachment: fixed;">
+<body class="min-h-screen text-gray-800 flex flex-col overflow-x-hidden" style="background-image: url('img-0323-011.jpg'); background-size: cover; background-position: center; background-attachment: fixed;">
 
     <!-- 全局載入畫面 -->
     <div id="global-loading" class="flex-1 flex flex-col items-center justify-center absolute inset-0 z-50 bg-white/80 backdrop-blur-sm">
         <!-- ⭐ 放大載入畫面的 Logo，加入位移校正置中 -->
         <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mb-4 animate-bounce bg-white flex items-center justify-center">
-            <img src="logo1.png" alt="Loading Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+            <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Loading Logo" class="w-full h-full object-cover transform scale-[1.5] -translate-x-[8%] -translate-y-[4%]">
         </div>
         <p class="text-gray-800 font-bold tracking-widest text-lg">系統啟動中...</p>
     </div>
@@ -61,7 +61,7 @@
         <div class="flex items-center justify-center mb-2 md:mb-4">
             <!-- ⭐ 修改3：稍微縮小 Logo 與標題高度，節省垂直空間 -->
             <div class="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 mr-3 rounded-full overflow-hidden border-2 border-white shadow-md bg-white flex items-center justify-center shrink-0">
-                <img src="logo1.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+                <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.6] -translate-x-[8%] -translate-y-[4%]">
             </div>
             <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-pink-600 tracking-wider drop-shadow-md" style="text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">智能拍貼機</h1>
         </div>
@@ -136,7 +136,7 @@
                     <div id="qrcode"></div>
                 </div>
 
-                <div class="flex gap-2 w-full justify-center md:justify-start">
+                <div class="flex gap-4 w-full justify-center md:justify-start">
                     <button id="btn-retake" class="px-6 py-3 md:px-8 md:py-4 bg-gray-200 text-gray-700 rounded-full font-semibold md:text-lg hover:bg-gray-300 transition w-1/2 md:w-auto">
                         <i class="fa-solid fa-arrow-rotate-left mr-2"></i> 重拍
                     </button>
@@ -180,7 +180,7 @@
             <button id="btn-close-login" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
             <h2 id="login-title" class="text-2xl font-bold text-center text-gray-800 mb-6">管理員登入</h2>
             
-            <form id="form-login" class="flex flex-col gap-2">
+            <form id="form-login" class="flex flex-col gap-4">
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">帳號</label>
                     <input type="text" id="login-username" placeholder="預設: admin" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
@@ -204,7 +204,7 @@
             <h1 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
                 <!-- ⭐ 放大後台的 Logo，加入位移校正置中 -->
                 <div class="w-10 h-10 md:w-12 md:h-12 mr-3 rounded-full overflow-hidden border border-gray-200 shadow-sm bg-white flex items-center justify-center shrink-0">
-                    <img src="logo1.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+                    <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.6] -translate-x-[8%] -translate-y-[4%]">
                 </div>
                 後台管理
             </h1>
@@ -223,8 +223,8 @@
                 <!-- 照片管理區 (佔2欄) -->
                 <div class="lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col">
                     <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">雲端照片庫</h2>
-                    <!-- ⭐ 稍微調整高度屬性，讓分頁按鈕能固定在下方 -->
-                    <div id="admin-photos-grid" class="grid grid-cols-2 md:grid-cols-3 gap-2 no-scrollbar overflow-y-auto flex-1 min-h-[50vh] p-2">
+                    <!-- ⭐ 修改：將 gap-4 改為 gap-2，p-2 改為 p-1，讓照片間距變小 -->
+                    <div id="admin-photos-grid" class="grid grid-cols-2 md:grid-cols-3 gap-2 no-scrollbar overflow-y-auto flex-1 min-h-[50vh] p-1">
                         <!-- 照片動態生成 -->
                         <div class="col-span-full text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin"></i> 載入中...</div>
                     </div>
@@ -326,7 +326,7 @@
         // ==========================================
         // 初始化 Firebase
         // ==========================================
-      const firebaseConfig = {
+         const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -349,7 +349,7 @@
         // ==========================================
         // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
         // ==========================================
-       const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
+      const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
 
         // ==========================================
         // 生成預設邊框
@@ -376,13 +376,13 @@
         `);
 
         // 新增預設邊框 3：可愛海兔 (請換成您自己的 GitHub Raw 或 Imgur 網址)
-    const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/03.png";
+         const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/03.png";
 
         // ⭐ 新增常數：整合所有預設邊框，讓系統與後台能統一讀取
         const DEFAULT_FRAMES = [
             { id: 'def1', url: defaultFrame1, name: 'Love Moment', isDefault: true },
             { id: 'def2', url: defaultFrame2, name: 'Film Strip', isDefault: true },
-            { id: 'def3', url: defaultFrame3, name: '可愛猴子', isDefault: true }
+            { id: 'def3', url: defaultFrame3, name: '可愛海兔', isDefault: true }
         ];
 
         // ==========================================
@@ -828,9 +828,11 @@
                         return;
                     } catch (createErr) {
                         console.warn("帳號建立失敗:", createErr);
-                        // ⭐ 修改：移除沙盒模式，顯示最真實的錯誤，提示去 Firebase 開啟權限
+                        // ⭐ 優化：給予更清楚、白話的錯誤提示
                         if (createErr.code === 'auth/operation-not-allowed') {
                             errorEl.innerHTML = "系統設定未完成：<br>請至 Firebase 後台啟用「電子郵件/密碼」登入方式！";
+                        } else if (createErr.code === 'auth/email-already-in-use') {
+                            errorEl.innerHTML = "密碼錯誤！<br>此帳號已存在，請使用您修改後的新密碼登入。<br><span class='text-gray-500 text-[10px] mt-1 block'>若忘記密碼，請至 Firebase 後台刪除帳號即可重置。</span>";
                         } else {
                             errorEl.innerText = "帳號建立失敗：" + (createErr.message || createErr.toString());
                         }
@@ -840,7 +842,7 @@
                 }
                 
                 // 3. 其他一般錯誤
-                errorEl.innerText = "登入失敗：請檢查帳號密碼，或確認是否已由管理員加入。";
+                errorEl.innerText = "登入失敗：帳號或密碼錯誤。";
                 errorEl.classList.remove('hidden');
             }
         });
