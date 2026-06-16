@@ -244,7 +244,8 @@
                 <!-- 照片管理區 -->
                 <div class="lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 border border-gray-100 flex flex-col h-fit">
                     <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">雲端照片庫</h2>
-                    <div id="admin-photos-grid" class="grid grid-cols-2 md:grid-cols-3 gap-2 content-start no-scrollbar overflow-y-auto max-h-[60vh] p-1 mb-2">
+                    <!-- ⭐ 修改：移除高度限制與捲軸，讓 6 張照片自然完整呈現 (2 排) -->
+                    <div id="admin-photos-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3 content-start p-1 mb-2 w-full h-auto">
                         <!-- 照片動態生成 -->
                         <div class="col-span-full text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin"></i> 載入中...</div>
                     </div>
@@ -266,7 +267,8 @@
                             <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-pink-600 transition">新增邊框</button>
                         </form>
 
-                        <div class="flex-1 overflow-y-auto no-scrollbar max-h-[30vh]">
+                        <!-- ⭐ 修改：設定固定高度 275px (剛好約 3 個邊框) 並加入 custom-scrollbar -->
+                        <div class="overflow-y-auto custom-scrollbar h-[275px] pr-2">
                             <ul id="admin-frames-list" class="flex flex-col gap-3">
                                 <li class="text-center text-gray-400 py-4"><i class="fa-solid fa-spinner fa-spin"></i> 載入中...</li>
                             </ul>
@@ -336,7 +338,7 @@
         // ==========================================
         // 初始化 Firebase (若有填入真實的 config 則會連線)
         // ==========================================
-  const firebaseConfig = {
+         const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -346,7 +348,6 @@
 };
         // 給您的拍貼機取一個專屬的 ID
         appId = 'my-custom-photo-booth';
-
 
         try {
             const app = initializeApp(firebaseConfig);
@@ -359,7 +360,7 @@
         // ==========================================
         // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
         // ==========================================
-     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
+       const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
 
         // ==========================================
         // 生成預設邊框
@@ -385,12 +386,12 @@
             </svg>
         `);
 
-        const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/03.png";
+        const defaultFrame3 = "https://raw.githubusercontent.com/您的帳號/專案名稱/main/可愛海兔去背版.png";
 
         const DEFAULT_FRAMES = [
             { id: 'def1', url: defaultFrame1, name: 'Love Moment', isDefault: true },
             { id: 'def2', url: defaultFrame2, name: 'Film Strip', isDefault: true },
-            { id: 'def3', url: defaultFrame3, name: '可愛猴子', isDefault: true }
+            { id: 'def3', url: defaultFrame3, name: '可愛海兔', isDefault: true }
         ];
 
         // ==========================================
