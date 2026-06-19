@@ -25,6 +25,12 @@
         /* 隱藏捲軸但可滾動 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 漂亮的自訂捲軸 */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 
     <!-- 極限防呆：若外部模組載入失敗，3秒後強制進入系統 -->
@@ -43,12 +49,12 @@
         }, 3000);
     </script>
 </head>
-<body class="min-h-screen text-gray-800 flex flex-col overflow-x-hidden" style="background-image: url('bk.jpg'); background-size: cover; background-position: center; background-attachment: fixed;">
+<body class="min-h-screen text-gray-800 flex flex-col overflow-x-hidden" style="background-image: url('img-0323-011.jpg'); background-size: cover; background-position: center; background-attachment: fixed;">
 
     <!-- 全局載入畫面 -->
     <div id="global-loading" class="flex-1 flex flex-col items-center justify-center absolute inset-0 z-50 bg-white/80 backdrop-blur-sm">
         <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mb-4 animate-bounce bg-white flex items-center justify-center">
-            <img src="logo1.png" alt="Loading Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+            <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Loading Logo" class="w-full h-full object-cover transform scale-[1.5] -translate-x-[8%] -translate-y-[4%]">
         </div>
         <p class="text-gray-800 font-bold tracking-widest text-lg">系統啟動中...</p>
     </div>
@@ -57,7 +63,7 @@
     <div id="view-booth" class="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 relative hidden w-full overflow-y-auto no-scrollbar">
         <div class="flex items-center justify-center mb-2 md:mb-4">
             <div class="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 mr-3 rounded-full overflow-hidden border-2 border-white shadow-md bg-white flex items-center justify-center shrink-0">
-                <img src="logo1.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+                <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.6] -translate-x-[8%] -translate-y-[4%]">
             </div>
             <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-pink-600 tracking-wider drop-shadow-md" style="text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">智能拍貼機</h1>
         </div>
@@ -85,6 +91,17 @@
 
         <!-- 控制按鈕 -->
         <div class="mt-4 md:mt-6 flex flex-col items-center z-10 w-full max-w-[95vw] sm:max-w-[500px] md:max-w-[60vh] lg:max-w-[70vh] xl:max-w-[75vh] shrink-0 mb-4">
+            
+            <!-- 拍攝模式切換 -->
+            <div class="flex gap-3 justify-center w-full px-4 md:px-8 mb-4">
+                <button id="btn-mode-1" class="flex-1 py-2 md:py-2.5 rounded-full text-sm md:text-base font-bold transition shadow-md bg-pink-500 text-white border-2 border-pink-500">
+                    <i class="fa-solid fa-camera mr-1"></i> 拍 1 張
+                </button>
+                <button id="btn-mode-4" class="flex-1 py-2 md:py-2.5 rounded-full text-sm md:text-base font-bold transition shadow-sm bg-white/90 text-gray-600 hover:bg-white border-2 border-gray-200">
+                    <i class="fa-solid fa-border-all mr-1"></i> 拍 4 張 (四格)
+                </button>
+            </div>
+
             <div class="flex items-center justify-between w-full px-4 md:px-8 mb-3 md:mb-5">
                 <button id="btn-prev-frame" class="w-12 h-12 md:w-16 md:h-16 lg:w-18 lg:h-18 bg-white rounded-full shadow-lg text-pink-500 hover:bg-pink-50 transition flex items-center justify-center text-xl md:text-2xl transform hover:-translate-x-1">
                     <i class="fa-solid fa-chevron-left"></i>
@@ -206,11 +223,11 @@
             <form id="form-login" class="flex flex-col gap-4">
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">帳號</label>
-                    <input type="text" id="login-username" placeholder="" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
+                    <input type="text" id="login-username" placeholder="預設: admin" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">密碼</label>
-                    <input type="password" id="login-password" placeholder="" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
+                    <input type="password" id="login-password" placeholder="預設: admin123" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:outline-none">
                 </div>
                 <button type="submit" id="btn-submit-login" class="w-full bg-gray-800 text-white py-3 rounded-xl font-bold hover:bg-gray-900 transition mt-2">
                     登入
@@ -226,7 +243,7 @@
         <header class="bg-white/80 shadow-sm px-6 py-4 flex justify-between items-center z-10 border-b border-gray-200">
             <h1 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
                 <div class="w-10 h-10 md:w-12 md:h-12 mr-3 rounded-full overflow-hidden border border-gray-200 shadow-sm bg-white flex items-center justify-center shrink-0">
-                    <img src="logo1.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.1] -translate-x-[8%] -translate-y-[4%]">
+                    <img src="Gemini_Generated_Image_kpq5mkpq5mkpq5mk.png" alt="Logo" class="w-full h-full object-cover transform scale-[1.6] -translate-x-[8%] -translate-y-[4%]">
                 </div>
                 後台管理
             </h1>
@@ -250,9 +267,8 @@
                             <button id="btn-batch-delete" class="text-sm bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1 rounded font-bold transition hidden shadow-sm"><i class="fa-solid fa-trash mr-1"></i>刪除 (<span id="batch-delete-count">0</span>)</button>
                         </div>
                     </div>
-                    <!-- ⭐ 修改：移除高度限制與捲軸，讓 6 張照片自然完整呈現 (2 排) -->
+                    <!-- 照片列表，使用 content-start 緊密排列 -->
                     <div id="admin-photos-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3 content-start p-1 mb-2 w-full h-auto">
-                        <!-- 照片動態生成 -->
                         <div class="col-span-full text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin"></i> 載入中...</div>
                     </div>
                     <!-- 分頁按鈕容器 -->
@@ -273,7 +289,6 @@
                             <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-pink-600 transition">新增邊框</button>
                         </form>
 
-                        <!-- ⭐ 修改：設定固定高度 275px (剛好約 3 個邊框) 並加入 custom-scrollbar -->
                         <div class="overflow-y-auto custom-scrollbar h-[275px] pr-2">
                             <ul id="admin-frames-list" class="flex flex-col gap-3">
                                 <li class="text-center text-gray-400 py-4"><i class="fa-solid fa-spinner fa-spin"></i> 載入中...</li>
@@ -300,7 +315,7 @@
 
     <script type="module">
         // ---------------------------------------------------------
-        // 1. Firebase 模組載入 (安全與乾淨的模組匯入)
+        // 1. Firebase 模組載入
         // ---------------------------------------------------------
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -313,26 +328,23 @@
         let unsubscribePhotos = null;
         let unsubscribeFrames = null;
         
-        // UI 狀態
         let currentMode = 'init'; // 'booth', 'result', 'shared', 'admin'
 
-        // 分頁狀態變數
+        // 分頁與批次刪除狀態
         let allAdminPhotos = []; 
         let currentPhotoPage = 1; 
         const PHOTOS_PER_PAGE = 6; 
-        let selectedPhotos = new Set(); // ⭐ 紀錄批次刪除選取的照片 ID
+        let selectedPhotos = new Set();
 
-        // 拍貼機狀態
+        // 拍貼機與連拍狀態
         const video = document.getElementById('webcam');
         const canvas = document.getElementById('output_canvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        
-        // 設定畫布解析度為 1:1 (正方形)
         const CANVAS_SIZE = 800; 
         canvas.width = CANVAS_SIZE;
         canvas.height = CANVAS_SIZE;
 
-        let frames = []; // 儲存資料庫撈回的邊框
+        let frames = []; 
         let currentFrameIndex = 0;
         let currentFrameImage = new Image();
         
@@ -342,10 +354,15 @@
         let animationFrameId = null;
         let lastVideoTime = -1;
 
+        // 拍攝模式 (1:單張, 4:四格拼圖)
+        let shootMode = 1; 
+        let capturedShots = []; 
+        let isShootingSequence = false; 
+
         // ==========================================
-        // 初始化 Firebase (若有填入真實的 config 則會連線)
+        // 初始化 Firebase
         // ==========================================
-       const firebaseConfig = {
+         const firebaseConfig = {
   apiKey: "AIzaSyC4xX1pgQECCv_0BPJ7c3evNJHDLPvZkmE",
   authDomain: "photobooth-92401.firebaseapp.com",
   projectId: "photobooth-92401",
@@ -365,16 +382,12 @@
             console.warn("Firebase 初始化失敗，將以離線模式運行:", e);
         }
 
-        // ==========================================
-        // 🔗 Google Apps Script 網址 (用於上傳至 Google 雲端硬碟)
-        // ==========================================
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
+      const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLK6bTOdKJerILvxQXOPJ6gHcdtGGJU-xa4ajgbTR9LDnUC9Od6Dn6gHRSlNqHqXY/exec";
 
         // ==========================================
-        // 生成預設邊框
+        // 預設邊框
         // ==========================================
         const btoaUTF8 = (str) => btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
-        
         const defaultFrame1 = `data:image/svg+xml;base64,` + btoaUTF8(`
             <svg width="800" height="800" xmlns="http://www.w3.org/2000/svg">
                 <rect x="20" y="20" width="760" height="760" fill="none" stroke="#ffffff" stroke-width="30" rx="15" />
@@ -385,7 +398,6 @@
                 <text x="400" y="750" font-family="sans-serif" font-size="40" fill="white" text-anchor="middle" font-weight="900" letter-spacing="5" style="text-shadow: 2px 2px 0px #ff69b4;">LOVE MOMENT</text>
             </svg>
         `);
-        
         const defaultFrame2 = `data:image/svg+xml;base64,` + btoaUTF8(`
             <svg width="800" height="800" xmlns="http://www.w3.org/2000/svg">
                 <rect x="0" y="0" width="800" height="800" fill="none" stroke="#222" stroke-width="40" />
@@ -393,13 +405,12 @@
                 <text x="400" y="760" font-family="monospace" font-size="30" fill="white" text-anchor="middle" font-weight="bold" background="black">/// FILM STRIP ///</text>
             </svg>
         `);
-
-        const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/03.png";
+      const defaultFrame3 = "https://raw.githubusercontent.com/wenchun0910-svg/PhotoBooth/main/03.png";
 
         const DEFAULT_FRAMES = [
             { id: 'def1', url: defaultFrame1, name: 'Love Moment', isDefault: true },
             { id: 'def2', url: defaultFrame2, name: 'Film Strip', isDefault: true },
-            { id: 'def3', url: defaultFrame3, name: '可愛猴子', isDefault: true }
+            { id: 'def3', url: defaultFrame3, name: '可愛海兔', isDefault: true }
         ];
 
         // ==========================================
@@ -417,9 +428,7 @@
                         } else {
                             await signInAnonymously(auth);
                         }
-                    } catch (err) {
-                        console.error("Auth Init Error:", err);
-                    }
+                    } catch (err) {}
                 };
                 await initAuth();
 
@@ -440,7 +449,6 @@
 
             setTimeout(() => {
                 if (currentMode === 'init') {
-                    console.warn("登入檢查逾時，進入離線模式");
                     if (viewDocId) setupSharedView(viewDocId);
                     else setupBoothMode();
                 }
@@ -451,21 +459,15 @@
             const globalLoading = document.getElementById('global-loading');
             if (globalLoading) globalLoading.classList.add('hidden');
             
-            document.getElementById('view-booth').classList.add('hidden');
-            document.getElementById('view-result').classList.add('hidden');
-            document.getElementById('view-shared').classList.add('hidden');
-            document.getElementById('view-admin-dashboard').classList.add('hidden');
-            document.getElementById('modal-admin-login').classList.add('hidden');
-            
-            if (viewId) {
-                document.getElementById(viewId).classList.remove('hidden');
-            }
+            ['view-booth', 'view-result', 'view-shared', 'view-admin-dashboard', 'modal-admin-login'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            if (viewId) document.getElementById(viewId).classList.remove('hidden');
         }
 
         async function setupSharedView(docId) {
             currentMode = 'shared';
             switchView('view-shared');
-            
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'photos', docId);
                 const docSnap = await getDoc(docRef);
@@ -479,7 +481,6 @@
                     imgEl.src = data.imageUrl || data.imageData;
                     imgEl.classList.remove('hidden');
                     btnDl.classList.remove('hidden');
-                    
                     btnDl.onclick = () => {
                         const a = document.createElement('a');
                         a.href = data.imageUrl || data.imageData;
@@ -490,9 +491,7 @@
                     document.getElementById('shared-loading').innerHTML = "找不到該照片 😢<br><span class='text-sm mt-2 block'>可能已被刪除</span>";
                     document.getElementById('shared-loading').classList.remove('hidden');
                 }
-            } catch (err) {
-                console.error("Fetch shared photo err:", err);
-            }
+            } catch (err) {}
         }
 
         async function setupBoothMode() {
@@ -508,7 +507,6 @@
                         if (currentFrameIndex >= frames.length) currentFrameIndex = 0;
                         updateFrameImage();
                     }, (err) => {
-                        console.error("Frames listener err:", err);
                         frames = [...DEFAULT_FRAMES];
                         updateFrameImage();
                     });
@@ -562,10 +560,8 @@
                     },
                     runningMode: "VIDEO"
                 });
-                console.log("MediaPipe initialized");
                 document.getElementById('gesture-hint').classList.remove('hidden');
             } catch (err) {
-                console.error("MediaPipe initialization failed:", err);
                 document.getElementById('loading-text').innerText = "手勢辨識載入失敗，請使用按鈕拍照";
             }
         }
@@ -583,7 +579,6 @@
                     requestAnimationFrame(renderLoop);
                 });
             } catch (err) {
-                console.error("Camera access denied:", err);
                 document.getElementById('loading-text').innerText = "無法存取相機，請確認權限";
             }
         }
@@ -607,14 +602,12 @@
                 if (currentFrameImage.complete && currentFrameImage.naturalWidth > 0) {
                     try {
                         ctx.drawImage(currentFrameImage, 0, 0, canvas.width, canvas.height);
-                    } catch (e) {
-                        console.warn("Canvas Tainted by CORS frame");
-                    }
+                    } catch (e) {}
                 }
             }
 
             let nowInMs = Date.now();
-            if (video.currentTime !== lastVideoTime && gestureRecognizer && !isCountingDown) {
+            if (video.currentTime !== lastVideoTime && gestureRecognizer && !isCountingDown && !isShootingSequence) {
                 lastVideoTime = video.currentTime;
                 const results = gestureRecognizer.recognizeForVideo(video, nowInMs);
                 
@@ -629,43 +622,100 @@
             animationFrameId = requestAnimationFrame(renderLoop);
         }
 
-        async function startCountdown() {
+        // ==========================================
+        // 拍照與連拍邏輯
+        // ==========================================
+        async function startCountdown(currentShotIndex = 1) {
             if (isCountingDown) return;
             isCountingDown = true;
-            document.getElementById('gesture-hint').classList.add('hidden');
             
+            if (currentShotIndex === 1) {
+                isShootingSequence = true;
+                capturedShots = []; 
+            }
+            
+            document.getElementById('gesture-hint').classList.add('hidden');
             const cdText = document.getElementById('countdown-text');
             cdText.classList.remove('opacity-0');
             
+            const indicatorHtml = shootMode === 4 ? `<div class="text-3xl md:text-4xl mt-4 bg-black/50 px-5 py-2 rounded-full drop-shadow-md">第 ${currentShotIndex} / 4 張</div>` : '';
+            
             for (let i = 3; i > 0; i--) {
-                cdText.innerText = i;
+                cdText.innerHTML = `<div class="flex flex-col items-center justify-center">${i}${indicatorHtml}</div>`;
                 cdText.style.transform = 'scale(0.5)';
                 setTimeout(() => cdText.style.transform = 'scale(1.5)', 50);
                 await new Promise(r => setTimeout(r, 1000));
             }
             
-            cdText.innerText = "";
+            cdText.innerHTML = "";
             cdText.classList.add('opacity-0');
-            
-            takePhoto();
+            takePhoto(currentShotIndex);
         }
 
-        async function takePhoto() {
+        async function takePhoto(currentShotIndex) {
             const flash = document.getElementById('flash-overlay');
             flash.style.opacity = '1';
             setTimeout(() => flash.style.opacity = '0', 150);
 
-            const imageData = canvas.toDataURL('image/jpeg', 0.7);
-            
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+            capturedShots.push(imageData);
             isCountingDown = false; 
-            showResultView(imageData);
             
+            if (shootMode === 1 || capturedShots.length === 4) {
+                processFinalPhoto();
+            } else {
+                await new Promise(r => setTimeout(r, 1000));
+                startCountdown(currentShotIndex + 1);
+            }
+        }
+
+        async function processFinalPhoto() {
+            let finalImageData = capturedShots[0];
+
+            if (shootMode === 4) {
+                document.getElementById('loading-state').classList.remove('hidden');
+                document.getElementById('loading-text').innerText = "四格拼圖處理中...";
+                await new Promise(r => setTimeout(r, 50)); 
+
+                const compCanvas = document.createElement('canvas');
+                compCanvas.width = CANVAS_SIZE * 2;
+                compCanvas.height = CANVAS_SIZE * 2;
+                const compCtx = compCanvas.getContext('2d');
+                
+                compCtx.fillStyle = 'white';
+                compCtx.fillRect(0, 0, compCanvas.width, compCanvas.height);
+
+                for (let i = 0; i < 4; i++) {
+                    const img = new Image();
+                    img.src = capturedShots[i];
+                    await new Promise(r => img.onload = r);
+                    const x = (i % 2) * CANVAS_SIZE;
+                    const y = Math.floor(i / 2) * CANVAS_SIZE;
+                    compCtx.drawImage(img, x, y, CANVAS_SIZE, CANVAS_SIZE);
+                    
+                    compCtx.strokeStyle = 'white';
+                    compCtx.lineWidth = 10;
+                    compCtx.strokeRect(x, y, CANVAS_SIZE, CANVAS_SIZE);
+                }
+                finalImageData = compCanvas.toDataURL('image/jpeg', 0.8);
+                
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('loading-text').innerText = "正在初始化相機與 AI...";
+            }
+
+            isShootingSequence = false;
+            capturedShots = []; 
+            showResultView(finalImageData);
+            uploadAndSavePhoto(finalImageData);
+        }
+
+        async function uploadAndSavePhoto(imageData) {
             if (db && auth && currentUserId) {
                 try {
                     let finalImageUrl = imageData;
                     let driveFileId = "";
 
-                    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com/")) {
+                    if (typeof GOOGLE_SCRIPT_URL !== 'undefined' && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com/")) {
                         const res = await fetch(GOOGLE_SCRIPT_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
@@ -679,8 +729,6 @@
                         if (result.success) {
                             finalImageUrl = result.url;
                             driveFileId = result.fileId;
-                        } else {
-                            console.error("Google Drive 上傳失敗:", result.error);
                         }
                     }
 
@@ -694,9 +742,7 @@
                     
                     const shareUrl = window.location.origin + window.location.pathname + '?view=' + docRef.id;
                     generateQRCode(shareUrl);
-                    
                 } catch (err) {
-                    console.error("Save photo err:", err);
                     generateQRCode(window.location.href); 
                 }
             } else {
@@ -731,8 +777,25 @@
         }
 
         // ==========================================
-        // UI 事件與按鈕綁定
+        // UI 事件與按鈕綁定 (主畫面)
         // ==========================================
+        const classModeActive = "flex-1 py-2 md:py-2.5 rounded-full text-sm md:text-base font-bold transition shadow-md bg-pink-500 text-white border-2 border-pink-500";
+        const classModeInactive = "flex-1 py-2 md:py-2.5 rounded-full text-sm md:text-base font-bold transition shadow-sm bg-white/90 text-gray-600 hover:bg-white border-2 border-gray-200";
+
+        document.getElementById('btn-mode-1').addEventListener('click', () => {
+            if (isShootingSequence) return;
+            shootMode = 1;
+            document.getElementById('btn-mode-1').className = classModeActive;
+            document.getElementById('btn-mode-4').className = classModeInactive;
+        });
+
+        document.getElementById('btn-mode-4').addEventListener('click', () => {
+            if (isShootingSequence) return;
+            shootMode = 4;
+            document.getElementById('btn-mode-4').className = classModeActive;
+            document.getElementById('btn-mode-1').className = classModeInactive;
+        });
+
         document.getElementById('btn-prev-frame').addEventListener('click', () => {
             if (frames.length === 0) return;
             currentFrameIndex = (currentFrameIndex - 1 + frames.length) % frames.length;
@@ -746,7 +809,7 @@
         });
 
         document.getElementById('btn-take-photo').addEventListener('click', () => {
-            if (!isCountingDown) startCountdown();
+            if (!isCountingDown && !isShootingSequence) startCountdown();
         });
 
         document.getElementById('btn-retake').addEventListener('click', () => {
@@ -763,7 +826,6 @@
                 const isSelected = idx === currentFrameIndex;
                 
                 div.className = `cursor-pointer rounded-xl overflow-hidden border-4 checkerboard relative aspect-square transition transform hover:scale-105 ${isSelected ? 'border-pink-500 shadow-md ring-2 ring-pink-200' : 'border-gray-100 hover:border-pink-300'}`;
-                
                 div.innerHTML = `
                     <img class="popup-frame-img w-full h-full object-contain absolute inset-0 z-10 drop-shadow-sm">
                     <div class="error-overlay hidden absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center text-red-500 text-xs font-bold"><i class="fa-solid fa-triangle-exclamation mb-1 text-lg"></i>圖片失效</div>
@@ -773,14 +835,9 @@
                 const imgEl = div.querySelector('.popup-frame-img');
                 const errOverlay = div.querySelector('.error-overlay');
                 
-                if (!f.url.startsWith('data:')) {
-                    imgEl.crossOrigin = "anonymous";
-                }
+                if (!f.url.startsWith('data:')) imgEl.crossOrigin = "anonymous";
                 imgEl.referrerPolicy = "no-referrer";
-                imgEl.onerror = () => { 
-                    imgEl.style.display = 'none'; 
-                    errOverlay.classList.remove('hidden');
-                };
+                imgEl.onerror = () => { imgEl.style.display = 'none'; errOverlay.classList.remove('hidden'); };
                 imgEl.src = f.url; 
                 
                 div.onclick = () => {
@@ -789,10 +846,8 @@
                     updateFrameImage();
                     document.getElementById('modal-frame-select').classList.add('hidden');
                 };
-                
                 grid.appendChild(div);
             });
-            
             document.getElementById('modal-frame-select').classList.remove('hidden');
         });
 
@@ -834,7 +889,6 @@
                         setupAdminDashboard();
                         return;
                     } catch (createErr) {
-                        console.warn("帳號建立失敗:", createErr);
                         if (createErr.code === 'auth/operation-not-allowed') {
                             errorEl.innerHTML = "系統設定未完成：<br>請至 Firebase 後台啟用「電子郵件/密碼」登入方式！";
                         } else if (createErr.code === 'auth/email-already-in-use') {
@@ -851,6 +905,9 @@
             }
         });
 
+        // ==========================================
+        // 後台管理邏輯
+        // ==========================================
         async function setupAdminDashboard() {
             currentMode = 'admin';
             switchView('view-admin-dashboard');
@@ -886,9 +943,6 @@
                     snapshot.forEach(doc => allAdminPhotos.push({ id: doc.id, ...doc.data() }));
                     allAdminPhotos.sort((a, b) => b.timestamp - a.timestamp);
                     renderAdminPhotos();
-                }, (err) => {
-                    console.error("Admin photos err:", err);
-                    document.getElementById('admin-photos-grid').innerHTML = `<div class="col-span-full text-center text-red-500 py-10"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i><br>資料庫讀取失敗<br><span class="text-xs text-gray-500 mt-2 block">${err.message}</span></div>`;
                 });
 
                 const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
@@ -896,16 +950,11 @@
                     let localFrames = [...DEFAULT_FRAMES];
                     snapshot.forEach(doc => localFrames.push({ id: doc.id, ...doc.data(), isDefault: false }));
                     renderAdminFrames(localFrames);
-                }, (err) => {
-                    console.error("Admin frames err:", err);
-                    document.getElementById('admin-frames-list').innerHTML = `<li class="text-center text-red-500 py-4 text-sm"><i class="fa-solid fa-triangle-exclamation"></i> 邊框讀取失敗<br><span class="text-xs mt-1 block">${err.message}</span></li>`;
                 });
-            } else {
-                document.getElementById('admin-photos-grid').innerHTML = '<div class="col-span-full text-center text-gray-400 py-10">未設定 Firebase，目前為離線模式</div>';
-                document.getElementById('admin-frames-list').innerHTML = '<li class="text-center text-gray-400 py-4 text-sm">離線模式無法載入邊框</li>';
             }
         }
 
+        // 渲染相片 (包含核取方塊與分頁)
         function renderAdminPhotos() {
             const grid = document.getElementById('admin-photos-grid');
             const paginationContainer = document.getElementById('admin-photos-pagination');
@@ -984,25 +1033,18 @@
                         
                         selectedPhotos.delete(id);
                         updateBatchDeleteUI();
-                        
-                    } catch (err) {
-                        console.error("刪除失敗", err);
-                        alert("刪除時發生錯誤");
-                    }
+                    } catch (err) {}
                 });
             });
 
             renderPaginationControls(totalPages);
         }
 
+        // 分頁按鈕渲染
         function renderPaginationControls(totalPages) {
             const container = document.getElementById('admin-photos-pagination');
             if (!container) return;
-
-            if (totalPages <= 1) {
-                container.innerHTML = '';
-                return;
-            }
+            if (totalPages <= 1) { container.innerHTML = ''; return; }
 
             container.innerHTML = `
                 <div class="flex justify-center items-center gap-4 pt-4 w-full">
@@ -1016,146 +1058,13 @@
                 </div>
             `;
 
-            const btnPrev = document.getElementById('btn-page-prev');
-            const btnNext = document.getElementById('btn-page-next');
-
-            if (btnPrev) {
-                btnPrev.addEventListener('click', () => {
-                    if (currentPhotoPage > 1) {
-                        currentPhotoPage--;
-                        renderAdminPhotos();
-                    }
-                });
-            }
-
-            if (btnNext) {
-                btnNext.addEventListener('click', () => {
-                    if (currentPhotoPage < totalPages) {
-                        currentPhotoPage++;
-                        renderAdminPhotos();
-                    }
-                });
-            }
-        }
-
-        function renderAdminFrames(localFrames) {
-            const list = document.getElementById('admin-frames-list');
-            list.innerHTML = '';
-            
-            if (localFrames.length === 0) {
-                list.innerHTML = '<li class="text-center text-gray-400 py-4 text-sm">目前無邊框記錄。</li>';
-                return;
-            }
-
-            const currentUser = auth.currentUser;
-            const currentUid = currentUser ? currentUser.uid : null;
-            const username = currentUser ? currentUser.email.split('@')[0] : '';
-            const isAdmin = username === 'admin';
-
-            localFrames.forEach(frame => {
-                const li = document.createElement('li');
-                li.className = "flex items-center gap-3 p-2 bg-gray-50 rounded-lg border";
-                
-                const isUploader = frame.uploaderUid === currentUid;
-                const canDelete = !frame.isDefault && (isAdmin || isUploader);
-                
-                let actionHtml = '';
-                if (frame.isDefault) {
-                    actionHtml = `<span class="text-xs text-pink-600 bg-pink-100 px-2 py-1 rounded font-bold shadow-sm whitespace-nowrap">系統預設</span>`;
-                } else if (canDelete) {
-                    actionHtml = `<button class="text-red-400 hover:text-red-600 p-2 btn-del-frame" data-id="${frame.id}">
-                        <i class="fa-solid fa-trash"></i>
-                       </button>`;
-                } else {
-                    actionHtml = `<span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded shadow-sm whitespace-nowrap">來自: ${frame.uploaderName || '其他人'}</span>`;
-                }
-
-                li.innerHTML = `
-                    <div class="w-16 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0 relative checkerboard flex items-center justify-center">
-                        <i class="fa-solid fa-image-slash text-gray-400 absolute z-0 text-xl"></i>
-                        <img class="admin-frame-img w-full h-full object-contain absolute inset-0 z-10 bg-transparent">
-                    </div>
-                    <div class="flex-1 truncate text-sm font-semibold text-gray-700">
-                        ${frame.name || '未命名邊框'}
-                        <span class="error-badge hidden text-xs text-red-500 ml-2 bg-red-50 px-2 py-0.5 rounded border border-red-100">圖片失效</span>
-                    </div>
-                    ${actionHtml}
-                `;
-                
-                const imgEl = li.querySelector('.admin-frame-img');
-                const errBadge = li.querySelector('.error-badge');
-                
-                if (frame.url && !frame.url.startsWith('data:')) {
-                    imgEl.crossOrigin = "anonymous";
-                }
-                imgEl.referrerPolicy = "no-referrer";
-                imgEl.onerror = () => { 
-                    imgEl.style.display = 'none'; 
-                    errBadge.classList.remove('hidden');
-                };
-                imgEl.src = frame.url || ''; 
-                
-                list.appendChild(li);
+            document.getElementById('btn-page-prev')?.addEventListener('click', () => {
+                if (currentPhotoPage > 1) { currentPhotoPage--; renderAdminPhotos(); }
             });
-
-            document.querySelectorAll('.btn-del-frame').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const id = e.target.closest('button').dataset.id;
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'frames', id));
-                });
+            document.getElementById('btn-page-next')?.addEventListener('click', () => {
+                if (currentPhotoPage < totalPages) { currentPhotoPage++; renderAdminPhotos(); }
             });
         }
-
-        document.getElementById('form-add-frame').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const nameInput = document.getElementById('new-frame-name');
-            const urlInput = document.getElementById('new-frame-url');
-            const submitBtn = e.target.querySelector('button');
-            
-            const name = nameInput.value.trim();
-            const url = urlInput.value.trim().replace(/^['"]+/, '').replace(/['"]+$/, '');
-            
-            if(!url) return;
-
-            submitBtn.disabled = true;
-            submitBtn.innerText = "驗證圖片中...";
-
-            const testImg = new Image();
-            if (!url.startsWith('data:')) {
-                testImg.crossOrigin = "anonymous"; 
-            }
-            
-            testImg.onload = async () => {
-                submitBtn.innerText = "新增中...";
-                try {
-                    const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
-                    const uploaderName = auth.currentUser ? auth.currentUser.email.split('@')[0] : 'unknown';
-                    await addDoc(framesRef, {
-                        name: name,
-                        url: url,
-                        timestamp: Date.now(),
-                        uploaderUid: auth.currentUser ? auth.currentUser.uid : null,
-                        uploaderName: uploaderName
-                    });
-                    nameInput.value = '';
-                    urlInput.value = '';
-                } catch (err) {
-                    console.error("Add frame error:", err);
-                    alert("新增邊框失敗！");
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = "新增邊框";
-                }
-            };
-
-            testImg.onerror = () => {
-                alert("❌ 圖片載入失敗或被阻擋！\n\n原因可能是：\n1. 網址不是「直接圖片連結」 (.png 結尾)。\n2. 該網站有「防盜鏈」機制，不允許拍貼機讀取。\n\n💡 建議解法：請將圖片上傳至 GitHub、Imgur 圖床並複製「直接連結」，或是轉成「Base64 字串」。");
-                submitBtn.disabled = false;
-                submitBtn.innerText = "新增邊框";
-            };
-
-            testImg.src = url;
-        });
 
         // ==========================================
         // 批次刪除邏輯
@@ -1202,30 +1111,129 @@
 
             try {
                 const photosToDelete = allAdminPhotos.filter(p => selectedPhotos.has(p.id));
-                
                 const deletePromises = photosToDelete.map(async (photo) => {
                     if (photo.driveFileId && typeof GOOGLE_SCRIPT_URL !== 'undefined' && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com/")) {
                         fetch(GOOGLE_SCRIPT_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                             body: JSON.stringify({ action: 'delete', fileId: photo.driveFileId })
-                        }).catch(err => console.warn("Drive 檔案刪除失敗", err));
+                        }).catch(err => {});
                     }
                     return deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'photos', photo.id));
                 });
 
                 await Promise.all(deletePromises);
-                
                 selectedPhotos.clear();
                 updateBatchDeleteUI();
                 
             } catch (err) {
-                console.error("批次刪除失敗", err);
                 alert("批次刪除時發生錯誤");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fa-solid fa-trash mr-1"></i>刪除 (<span id="batch-delete-count">${selectedPhotos.size}</span>)`;
             }
+        });
+
+        // 渲染邊框列表
+        function renderAdminFrames(localFrames) {
+            const list = document.getElementById('admin-frames-list');
+            list.innerHTML = '';
+            
+            if (localFrames.length === 0) {
+                list.innerHTML = '<li class="text-center text-gray-400 py-4 text-sm">目前無邊框記錄。</li>';
+                return;
+            }
+
+            const currentUser = auth.currentUser;
+            const currentUid = currentUser ? currentUser.uid : null;
+            const username = currentUser ? currentUser.email.split('@')[0] : '';
+            const isAdmin = username === 'admin';
+
+            localFrames.forEach(frame => {
+                const li = document.createElement('li');
+                li.className = "flex items-center gap-3 p-2 bg-gray-50 rounded-lg border mr-1";
+                
+                const isUploader = frame.uploaderUid === currentUid;
+                const canDelete = !frame.isDefault && (isAdmin || isUploader);
+                
+                let actionHtml = '';
+                if (frame.isDefault) {
+                    actionHtml = `<span class="text-xs text-pink-600 bg-pink-100 px-2 py-1 rounded font-bold shadow-sm whitespace-nowrap">系統預設</span>`;
+                } else if (canDelete) {
+                    actionHtml = `<button class="text-red-400 hover:text-red-600 p-2 btn-del-frame" data-id="${frame.id}"><i class="fa-solid fa-trash"></i></button>`;
+                } else {
+                    actionHtml = `<span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded shadow-sm whitespace-nowrap">來自: ${frame.uploaderName || '其他人'}</span>`;
+                }
+
+                li.innerHTML = `
+                    <div class="w-16 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0 relative checkerboard flex items-center justify-center">
+                        <i class="fa-solid fa-image-slash text-gray-400 absolute z-0 text-xl"></i>
+                        <img class="admin-frame-img w-full h-full object-contain absolute inset-0 z-10 bg-transparent">
+                    </div>
+                    <div class="flex-1 truncate text-sm font-semibold text-gray-700">
+                        ${frame.name || '未命名邊框'}
+                        <span class="error-badge hidden text-xs text-red-500 ml-2 bg-red-50 px-2 py-0.5 rounded border border-red-100">圖片失效</span>
+                    </div>
+                    ${actionHtml}
+                `;
+                
+                const imgEl = li.querySelector('.admin-frame-img');
+                const errBadge = li.querySelector('.error-badge');
+                if (frame.url && !frame.url.startsWith('data:')) imgEl.crossOrigin = "anonymous";
+                imgEl.referrerPolicy = "no-referrer";
+                imgEl.onerror = () => { imgEl.style.display = 'none'; errBadge.classList.remove('hidden'); };
+                imgEl.src = frame.url || ''; 
+                
+                list.appendChild(li);
+            });
+
+            document.querySelectorAll('.btn-del-frame').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.target.closest('button').dataset.id;
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'frames', id));
+                });
+            });
+        }
+
+        // 新增邊框
+        document.getElementById('form-add-frame').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('new-frame-name');
+            const urlInput = document.getElementById('new-frame-url');
+            const submitBtn = e.target.querySelector('button');
+            
+            const name = nameInput.value.trim();
+            const url = urlInput.value.trim().replace(/^['"]+/, '').replace(/['"]+$/, '');
+            if(!url) return;
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "驗證圖片中...";
+
+            const testImg = new Image();
+            if (!url.startsWith('data:')) testImg.crossOrigin = "anonymous"; 
+            
+            testImg.onload = async () => {
+                submitBtn.innerText = "新增中...";
+                try {
+                    const framesRef = collection(db, 'artifacts', appId, 'public', 'data', 'frames');
+                    const uploaderName = auth.currentUser ? auth.currentUser.email.split('@')[0] : 'unknown';
+                    await addDoc(framesRef, {
+                        name: name, url: url, timestamp: Date.now(),
+                        uploaderUid: auth.currentUser ? auth.currentUser.uid : null,
+                        uploaderName: uploaderName
+                    });
+                    nameInput.value = ''; urlInput.value = '';
+                } catch (err) {
+                    alert("新增邊框失敗！");
+                } finally {
+                    submitBtn.disabled = false; submitBtn.innerText = "新增邊框";
+                }
+            };
+            testImg.onerror = () => {
+                alert("❌ 圖片載入失敗！\n可能是防盜鏈或網址無效。");
+                submitBtn.disabled = false; submitBtn.innerText = "新增邊框";
+            };
+            testImg.src = url;
         });
 
         // ==========================================
@@ -1235,95 +1243,65 @@
         const modalCollab = document.getElementById('modal-add-collaborator');
 
         document.getElementById('btn-open-password-modal')?.addEventListener('click', () => {
-            modalPwd.classList.remove('hidden');
-            document.getElementById('change-pwd-msg').classList.add('hidden');
+            modalPwd.classList.remove('hidden'); document.getElementById('change-pwd-msg').classList.add('hidden');
         });
-        document.getElementById('btn-close-password-modal')?.addEventListener('click', () => {
-            modalPwd.classList.add('hidden');
-        });
+        document.getElementById('btn-close-password-modal')?.addEventListener('click', () => modalPwd.classList.add('hidden'));
 
         document.getElementById('btn-open-collab-modal')?.addEventListener('click', () => {
-            modalCollab.classList.remove('hidden');
-            document.getElementById('add-collab-msg').classList.add('hidden');
+            modalCollab.classList.remove('hidden'); document.getElementById('add-collab-msg').classList.add('hidden');
         });
-        document.getElementById('btn-close-collab-modal')?.addEventListener('click', () => {
-            modalCollab.classList.add('hidden');
+        document.getElementById('btn-close-collab-modal')?.addEventListener('click', () => modalCollab.classList.add('hidden'));
+
+        document.getElementById('form-change-password')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPwd = document.getElementById('new-password').value;
+            const msgEl = document.getElementById('change-pwd-msg');
+            const btn = e.target.querySelector('button');
+            
+            msgEl.classList.add('hidden'); btn.disabled = true; btn.innerText = "更新中...";
+
+            try {
+                if (!auth.currentUser || auth.currentUser.isAnonymous) throw new Error("無效身分。");
+                await updatePassword(auth.currentUser, newPwd);
+                msgEl.innerText = "✅ 更新成功！";
+                msgEl.className = "text-sm text-center mt-4 text-green-600 font-bold bg-green-50 py-2 rounded-lg";
+                e.target.reset();
+                setTimeout(() => modalPwd.classList.add('hidden'), 1500);
+            } catch (err) {
+                msgEl.innerText = err.code === 'auth/requires-recent-login' ? "❌ 驗證過期，請重新登入。" : "❌ 失敗：" + err.message;
+                msgEl.className = "text-sm text-center mt-4 text-red-500 font-bold bg-red-50 py-2 rounded-lg";
+            } finally {
+                msgEl.classList.remove('hidden'); btn.disabled = false; btn.innerText = "更新密碼";
+            }
         });
 
-        const formChangePassword = document.getElementById('form-change-password');
-        if (formChangePassword) {
-            formChangePassword.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const newPwd = document.getElementById('new-password').value;
-                const msgEl = document.getElementById('change-pwd-msg');
-                const btn = e.target.querySelector('button');
-                
-                msgEl.classList.add('hidden');
-                btn.disabled = true;
-                btn.innerText = "更新中...";
+        document.getElementById('form-add-collaborator')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('new-collab-username').value;
+            const pwd = document.getElementById('new-collab-password').value;
+            const email = getFakeEmail(username);
+            const msgEl = document.getElementById('add-collab-msg');
+            const btn = e.target.querySelector('button');
+            
+            msgEl.classList.add('hidden'); btn.disabled = true; btn.innerText = "建立中...";
 
-                try {
-                    if (!auth.currentUser || auth.currentUser.isAnonymous) {
-                        throw new Error("目前為訪客身分或測試模式，無法修改密碼。");
-                    }
-                    await updatePassword(auth.currentUser, newPwd);
-                    msgEl.innerText = "✅ 密碼更新成功！";
-                    msgEl.className = "text-sm text-center mt-4 text-green-600 font-bold bg-green-50 py-2 rounded-lg";
-                    e.target.reset();
-                    setTimeout(() => { modalPwd.classList.add('hidden'); }, 1500);
-                } catch (err) {
-                    console.error("修改密碼失敗:", err);
-                    if (err.code === 'auth/requires-recent-login') {
-                        msgEl.innerText = "❌ 安全驗證過期，請登出後再重新登入。";
-                    } else {
-                        msgEl.innerText = "❌ 更新失敗：" + (err.message || err.toString());
-                    }
-                    msgEl.className = "text-sm text-center mt-4 text-red-500 font-bold bg-red-50 py-2 rounded-lg break-words";
-                } finally {
-                    msgEl.classList.remove('hidden');
-                    btn.disabled = false;
-                    btn.innerText = "更新密碼";
-                }
-            });
-        }
-
-        const formAddCollaborator = document.getElementById('form-add-collaborator');
-        if (formAddCollaborator) {
-            formAddCollaborator.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const username = document.getElementById('new-collab-username').value;
-                const pwd = document.getElementById('new-collab-password').value;
-                const email = getFakeEmail(username);
-                const msgEl = document.getElementById('add-collab-msg');
-                const btn = e.target.querySelector('button');
-                
-                msgEl.classList.add('hidden');
-                btn.disabled = true;
-                btn.innerText = "建立中...";
-
-                try {
-                    const appName = "SecondaryApp_" + Date.now();
-                    const secondaryApp = initializeApp(firebaseConfig, appName);
-                    const secondaryAuth = getAuth(secondaryApp);
-                    
-                    await createUserWithEmailAndPassword(secondaryAuth, email, pwd);
-                    await signOut(secondaryAuth); 
-                    
-                    msgEl.innerText = "✅ 協作者建立成功！";
-                    msgEl.className = "text-sm text-center mt-4 text-green-600 font-bold bg-green-50 py-2 rounded-lg";
-                    e.target.reset();
-                    setTimeout(() => { modalCollab.classList.add('hidden'); }, 1500);
-                } catch (err) {
-                    console.error("建立協作者失敗:", err);
-                    msgEl.innerText = "❌ 建立失敗：" + (err.message || err.toString());
-                    msgEl.className = "text-sm text-center mt-4 text-red-500 font-bold bg-red-50 py-2 rounded-lg break-words";
-                } finally {
-                    msgEl.classList.remove('hidden');
-                    btn.disabled = false;
-                    btn.innerText = "建立帳號";
-                }
-            });
-        }
+            try {
+                const appName = "SecondaryApp_" + Date.now();
+                const secondaryApp = initializeApp(firebaseConfig, appName);
+                const secondaryAuth = getAuth(secondaryApp);
+                await createUserWithEmailAndPassword(secondaryAuth, email, pwd);
+                await signOut(secondaryAuth); 
+                msgEl.innerText = "✅ 建立成功！";
+                msgEl.className = "text-sm text-center mt-4 text-green-600 font-bold bg-green-50 py-2 rounded-lg";
+                e.target.reset();
+                setTimeout(() => modalCollab.classList.add('hidden'), 1500);
+            } catch (err) {
+                msgEl.innerText = "❌ 建立失敗：" + err.message;
+                msgEl.className = "text-sm text-center mt-4 text-red-500 font-bold bg-red-50 py-2 rounded-lg";
+            } finally {
+                msgEl.classList.remove('hidden'); btn.disabled = false; btn.innerText = "建立帳號";
+            }
+        });
 
         document.getElementById('btn-logout').addEventListener('click', async () => {
             if(auth) await signOut(auth);
@@ -1349,7 +1327,6 @@
         // 啟動入口
         // ==========================================
         window.addEventListener('load', initApp);
-
     </script>
 </body>
 </html>
